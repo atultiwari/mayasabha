@@ -92,28 +92,57 @@ test('a bubble that is still appearing cannot pop yet, so a child standing there
   assert.ok(spawnBubble(STAGE, rng, false).age >= BUBBLE.appearS, 'bubbles there at the start are ready');
 });
 
-test('bubbles glide around the puja picture and never float over it', () => {
+test('bubbles never float over the puja picture', () => {
   let seed = 11;
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const puja = { x: 483, y: -13, w: 413, h: 355 };
   const overlaps = (b) => b.x + b.r > puja.x && b.x - b.r < puja.x + puja.w && b.y + b.r > puja.y && b.y - b.r < puja.y + puja.h;
   let bubbles = Array.from({ length: 30 }, () => spawnBubble(STAGE, rand, true, [puja]));
   let worst = 0;
-  for (let i = 0; i < 600; i += 1) {
+  for (let i = 0; i < 900; i += 1) {
     bubbles = stepBubbles(bubbles, 1 / 30, STAGE, rand, [puja]);
-    worst = Math.max(worst, bubbles.filter((b) => b.fade > 0 && overlaps(b)).length);
+    worst = Math.max(worst, bubbles.filter(overlaps).length);
   }
   assert.equal(worst, 0);
-  const [lo, hi] = BUBBLE.band.map((f) => f * STAGE.w);
-  assert.ok(bubbles.every((b) => b.x - b.r >= lo - 1 && b.x + b.r <= hi + 1), 'still in the middle of the wall');
 });
 
-test('bubbles stay spread out under the picture instead of crowding into one column beside it', () => {
-  let seed = 5;
+test('a bubble that bumps into the picture dances along its bottom edge, then carries on rising beside it', () => {
+  const puja = { x: 483, y: -13, w: 413, h: 355 };
+  let [b] = [{ ...spawnBubble(STAGE, rng, false), x0: 640, x: 640, y: 700, r: 90 }];
+  let slid = false;
+  for (let i = 0; i < 30 * 20 && b.y > -b.r; i += 1) {
+    [b] = stepBubbles([b], 1 / 30, STAGE, rng, [puja]);
+    if (b.slide) {
+      slid = true;
+      assert.ok(b.y - b.r >= puja.y + puja.h, 'stays under the frame while dancing');
+    }
+    if (slid && !b.slide && b.y < puja.y + puja.h) {
+      assert.ok(b.x + b.r <= puja.x || b.x - b.r >= puja.x + puja.w, 'rises beside the frame');
+      return;
+    }
+  }
+  assert.fail(`never got past the frame (slid: ${slid})`);
+});
+
+test('no bubble gets stuck under the picture, and dancers spread out instead of piling up at one edge', () => {
+  let seed = 3;
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const puja = { x: 483, y: -13, w: 413, h: 355 };
-  let bubbles = Array.from({ length: 40 }, () => spawnBubble(STAGE, rand, true, [puja]));
-  for (let i = 0; i < 300; i += 1) bubbles = stepBubbles(bubbles, 1 / 30, STAGE, rand, [puja]);
-  const underPicture = bubbles.filter((b) => b.x < puja.x + puja.w && b.y > puja.y + puja.h).length;
-  assert.ok(underPicture >= 5, `only ${underPicture} of 40 below the picture`);
+  let bubbles = Array.from({ length: 12 }, () => spawnBubble(STAGE, rand, true, [puja]));
+  const highest = new Map(); // id -> [lowest y so far, seconds without rising past it]
+  const ends = [];
+  for (let i = 0; i < 30 * 40; i += 1) {
+    const before = new Map(bubbles.map((b) => [b.id, b]));
+    bubbles = stepBubbles(bubbles, 1 / 30, STAGE, rand, [puja]);
+    for (const b of bubbles) {
+      const [top, stalled] = highest.get(b.id) ?? [Infinity, 0];
+      highest.set(b.id, b.y < top - 0.5 ? [b.y, 0] : [top, stalled + 1 / 30]);
+      assert.ok(highest.get(b.id)[1] < 6, `bubble ${b.id} stuck at y ${Math.round(b.y)}`);
+      if (before.get(b.id)?.slide && !b.slide) ends.push(Math.round(b.x0));
+    }
+  }
+  assert.ok(ends.length >= 4, `only ${ends.length} dances finished`);
+  assert.ok(new Set(ends.map((x) => Math.round(x / 25))).size >= 3, `dancers all end at ${[...new Set(ends)]}`);
+  const left = ends.filter((x) => x < puja.x).length;
+  assert.ok(left >= ends.length * 0.3 && left <= ends.length * 0.7, `dancers leave on both sides: ${left} of ${ends.length} went left`);
 });

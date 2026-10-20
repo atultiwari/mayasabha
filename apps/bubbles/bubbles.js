@@ -15,11 +15,11 @@ const HAND_REACH = 0.95; // of the radius
 
 let counter = 0;
 
-/** A new bubble; fresh ones are blown in mid-wall, never right under a protected picture in `avoid`. */
+/** A new bubble; fresh ones are blown in mid-wall, never on top of a protected picture in `avoid`. */
 export function spawnBubble(stage, rng, fresh, avoid = []) {
   for (let tries = 0; tries < 8; tries += 1) {
     const b = makeBubble(stage, rng, fresh);
-    if (!avoid.some((box) => nearBelow(b.y, b.r, box) && inLine(b.x0, b.r, box))) return b;
+    if (!avoid.some((box) => overlapsBox(b, box))) return b;
   }
   return { ...makeBubble(stage, rng, fresh), y: stage.h * BUBBLE.appearBand[1] };
 }
@@ -34,47 +34,55 @@ function makeBubble(stage, rng, fresh) {
     id: `b${counter}`, r, x0, x: x0,
     y: fresh ? stage.h * (BUBBLE.appearBand[0] + rng() * (BUBBLE.appearBand[1] - BUBBLE.appearBand[0])) : r + rng() * (stage.h - r),
     vy: BUBBLE.speed[0] + rng() * (BUBBLE.speed[1] - BUBBLE.speed[0]),
-    phase: rng() * Math.PI * 2, hue: rng() * 360, age: fresh ? 0 : BUBBLE.appearS, fade: 1,
+    phase: rng() * Math.PI * 2, hue: rng() * 360, age: fresh ? 0 : BUBBLE.appearS, slide: null,
     surprise: rng() < BUBBLE.surpriseChance ? SURPRISES[Math.floor(rng() * SURPRISES.length)] : null,
   };
 }
 
-// Protected pictures (the puja frame): a bubble only slightly in line nudges aside; one heading
-// straight in fades away below it, so bubbles stay spread out at the child's height.
-const AVOID = Object.freeze({ gap: 20, zone: 130, nudge: 0.6, nudgeSpeed: 200, fadeS: 0.8 });
+// Protected pictures (the puja frame): a bubble that bumps into one dances sideways along its bottom
+// edge to one side (its own pick), then carries on rising beside it. Bubbles never float over a picture.
+export const DANCE = Object.freeze({ gap: 12, speed: 170, bounce: 16, bounceHz: 2.2, spread: [10, 130] });
 
-const inLine = (x0, r, box) => x0 + r + BUBBLE.sway + AVOID.gap > box.x && x0 - r - BUBBLE.sway - AVOID.gap < box.x + box.w;
-const nearBelow = (y, r, box) => y + r > box.y && y - r < box.y + box.h + AVOID.zone;
+const inLine = (x0, r, box) => x0 + r + BUBBLE.sway + DANCE.gap > box.x && x0 - r - BUBBLE.sway - DANCE.gap < box.x + box.w;
+const overlapsBox = (b, box) => inLine(b.x0, b.r, box) && b.y + b.r > box.y && b.y - b.r < box.y + box.h + DANCE.gap;
+const under = (box, r) => box.y + box.h + r + DANCE.gap;
 
-/** Sideways step that clears `box` when the bubble is only slightly in line with it; null if too far in. */
-function nudge(b, box, stage) {
-  const reach = b.r + BUBBLE.sway + AVOID.gap;
-  const lo = BUBBLE.band[0] * stage.w + b.r + BUBBLE.sway;
-  const hi = BUBBLE.band[1] * stage.w - b.r - BUBBLE.sway;
-  const options = [box.x - reach, box.x + box.w + reach].filter((x) => x >= lo && x <= hi && Math.abs(x - b.x0) <= b.r * AVOID.nudge);
-  return options.length ? options.reduce((a, x) => (Math.abs(x - b.x0) < Math.abs(a - b.x0) ? x : a)) : null;
+/**
+ * Where a bubble ends its dance: past one edge of the picture by its own little distance, so
+ * dancers spread out (and never end exactly on the edge, which would count as touching it again).
+ */
+function danceTarget(r, box, phase) {
+  const [near, far] = DANCE.spread;
+  const reach = r + BUBBLE.sway + DANCE.gap + near + (phase / (Math.PI * 2)) * (far - near);
+  // Each bubble picks its own side (half go left, half right), so bubbles appear on both sides.
+  return Math.sin(phase * 7) < 0 ? box.x - reach : box.x + box.w + reach;
+}
+
+/** One step of a bubble dancing along the underside of a picture. */
+function dance(b, box, dt, age) {
+  const step = DANCE.speed * dt;
+  const x0 = Math.abs(b.slide.to - b.x0) <= step ? b.slide.to : b.x0 + Math.sign(b.slide.to - b.x0) * step;
+  const hop = Math.abs(Math.sin(age * Math.PI * DANCE.bounceHz)) * DANCE.bounce; // bumps along the frame
+  const done = x0 === b.slide.to;
+  return { ...b, age, x0, y: under(box, b.r) + hop, x: x0 + Math.sin(age * 0.8 + b.phase) * BUBBLE.sway, slide: done ? null : b.slide };
 }
 
 /**
- * Floats bubbles upward with a gentle sway; ones that leave the top (or fade out under a picture)
- * are blown in again mid-wall. `avoid` are boxes bubbles never float over.
+ * Floats bubbles upward with a gentle sway; ones that leave the top are blown in again mid-wall.
+ * `avoid` are boxes (protected pictures) that bubbles dance around instead of floating over.
  */
 export function stepBubbles(bubbles, dt, stage, rng = Math.random, avoid = []) {
   return bubbles.map((b) => {
     const age = b.age + dt;
+    if (b.slide && avoid[b.slide.box]) return dance(b, avoid[b.slide.box], dt, age);
     const y = b.y - b.vy * dt;
     if (y < -b.r) return spawnBubble(stage, rng, true, avoid);
-    let { x0, fade = 1 } = b;
-    let leaving = fade < 1;
-    for (const box of avoid) {
-      if (leaving || !nearBelow(y, b.r, box) || !inLine(x0, b.r, box)) continue;
-      const target = nudge({ ...b, x0 }, box, stage);
-      if (target === null) leaving = true;
-      else x0 += Math.sign(target - x0) * Math.min(Math.abs(target - x0), AVOID.nudgeSpeed * dt);
+    const hit = avoid.findIndex((box) => inLine(b.x0, b.r, box) && y - b.r < box.y + box.h + DANCE.gap && b.y > box.y + box.h);
+    if (hit !== -1) {
+      const box = avoid[hit];
+      return dance({ ...b, slide: { box: hit, to: danceTarget(b.r, box, b.phase) } }, box, dt, age);
     }
-    if (leaving) fade -= dt / AVOID.fadeS;
-    if (fade <= 0) return spawnBubble(stage, rng, true, avoid);
-    return { ...b, age, y, x0, fade, x: x0 + Math.sin(age * 0.8 + b.phase) * BUBBLE.sway };
+    return { ...b, age, y, slide: null, x: b.x0 + Math.sin(age * 0.8 + b.phase) * BUBBLE.sway };
   });
 }
 
@@ -85,7 +93,7 @@ export function fillBubbles(bubbles, count, stage, rng = Math.random, avoid = []
 }
 
 function touched(b, { grid, hands }) {
-  if (b.age < BUBBLE.appearS || (b.fade ?? 1) < 1) return false;
+  if (b.age < BUBBLE.appearS) return false;
   if (hands.some((h) => Math.hypot(h.x - b.x, h.y - b.y) < b.r * HAND_REACH)) return true;
   if (!grid) return false;
   if (gridAt(grid, b)) return true;

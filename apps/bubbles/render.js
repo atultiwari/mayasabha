@@ -1,7 +1,7 @@
 // Draws iridescent soap bubbles (with a surprise floating inside some), popped surprises, and
 // glowing, flapping butterflies on a black stage.
 import { drawFx } from '../../kit/fx.js';
-import { BUBBLE } from './bubbles.js';
+import { BUBBLE, DANCE } from './bubbles.js';
 
 const PALETTES = [
   ['#ff9a2e', '#ffd23e'], ['#3ec8ff', '#8a7dff'], ['#ff5fa2', '#ffd1e8'], ['#7be08a', '#e8ff6a'], ['#c084fc', '#ff9ad5'],
@@ -18,11 +18,21 @@ function drawImageFit(ctx, img, cx, cy, height, alpha = 1) {
 
 function drawBubble(ctx, b, chars) {
   const grow = Math.min(1, b.age / BUBBLE.appearS); // blown in: fades and swells into view
-  const fade = Math.max(0, b.fade ?? 1); // fading away under a protected picture
-  if (grow < 1 || fade < 1) {
+  if (grow < 1) {
     ctx.save();
-    ctx.globalAlpha = grow * fade;
-    drawBubble(ctx, { ...b, r: b.r * (0.4 + 0.6 * grow), age: Math.max(b.age, BUBBLE.appearS), fade: 1 }, chars);
+    ctx.globalAlpha = grow;
+    drawBubble(ctx, { ...b, r: b.r * (0.4 + 0.6 * grow), age: BUBBLE.appearS }, chars);
+    ctx.restore();
+    return;
+  }
+  if (b.slide) {
+    // Dancing under a picture: squashed flat against it at each bump, round again in between.
+    const press = 1 - Math.abs(Math.sin(b.age * Math.PI * DANCE.bounceHz));
+    ctx.save();
+    ctx.translate(b.x, b.y - b.r);
+    ctx.scale(1 + 0.12 * press, 1 - 0.12 * press);
+    ctx.translate(-b.x, -(b.y - b.r));
+    drawBubble(ctx, { ...b, slide: null }, chars);
     ctx.restore();
     return;
   }
