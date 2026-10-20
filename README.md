@@ -12,6 +12,8 @@ fully offline on your home Wi-Fi.
 
 ![Ceiling Window: a hole in the ceiling with the sky beyond](docs/ceiling-sky.png)
 
+**▶ Play online:** [atultiwari.github.io/mayasabha](https://atultiwari.github.io/mayasabha/). Built-in characters, keyboard controls. For the phone remote and your own characters, [run it at home](#quick-start).
+
 - **Plain web pages, no install for players.** Fullscreen black pages run on the computer connected to the
   projector. Black projects as no light, so only the magic shows on the wall.
 - **Corner-pin warp** fits the picture to any wall, floor or ceiling, even with the projector tilted.
