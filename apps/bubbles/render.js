@@ -10,17 +10,19 @@ const SURPRISE_SIZE = 280;
 
 function drawImageFit(ctx, img, cx, cy, height, alpha = 1) {
   const width = height * (img.width / img.height);
-  ctx.globalAlpha = alpha;
+  const before = ctx.globalAlpha; // keep any fade already applied
+  ctx.globalAlpha = before * alpha;
   ctx.drawImage(img, cx - width / 2, cy - height / 2, width, height);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = before;
 }
 
 function drawBubble(ctx, b, chars) {
   const grow = Math.min(1, b.age / BUBBLE.appearS); // blown in: fades and swells into view
-  if (grow < 1) {
+  const fade = Math.max(0, b.fade ?? 1); // fading away under a protected picture
+  if (grow < 1 || fade < 1) {
     ctx.save();
-    ctx.globalAlpha = grow;
-    drawBubble(ctx, { ...b, r: b.r * (0.4 + 0.6 * grow), age: BUBBLE.appearS }, chars);
+    ctx.globalAlpha = grow * fade;
+    drawBubble(ctx, { ...b, r: b.r * (0.4 + 0.6 * grow), age: Math.max(b.age, BUBBLE.appearS), fade: 1 }, chars);
     ctx.restore();
     return;
   }

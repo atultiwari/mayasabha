@@ -91,3 +91,29 @@ test('a bubble that is still appearing cannot pop yet, so a child standing there
   assert.equal(popTouched([{ ...grown, x: 500, y: 500 }], hand).popped.length, 1);
   assert.ok(spawnBubble(STAGE, rng, false).age >= BUBBLE.appearS, 'bubbles there at the start are ready');
 });
+
+test('bubbles glide around the puja picture and never float over it', () => {
+  let seed = 11;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const puja = { x: 483, y: -13, w: 413, h: 355 };
+  const overlaps = (b) => b.x + b.r > puja.x && b.x - b.r < puja.x + puja.w && b.y + b.r > puja.y && b.y - b.r < puja.y + puja.h;
+  let bubbles = Array.from({ length: 30 }, () => spawnBubble(STAGE, rand, true, [puja]));
+  let worst = 0;
+  for (let i = 0; i < 600; i += 1) {
+    bubbles = stepBubbles(bubbles, 1 / 30, STAGE, rand, [puja]);
+    worst = Math.max(worst, bubbles.filter((b) => b.fade > 0 && overlaps(b)).length);
+  }
+  assert.equal(worst, 0);
+  const [lo, hi] = BUBBLE.band.map((f) => f * STAGE.w);
+  assert.ok(bubbles.every((b) => b.x - b.r >= lo - 1 && b.x + b.r <= hi + 1), 'still in the middle of the wall');
+});
+
+test('bubbles stay spread out under the picture instead of crowding into one column beside it', () => {
+  let seed = 5;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const puja = { x: 483, y: -13, w: 413, h: 355 };
+  let bubbles = Array.from({ length: 40 }, () => spawnBubble(STAGE, rand, true, [puja]));
+  for (let i = 0; i < 300; i += 1) bubbles = stepBubbles(bubbles, 1 / 30, STAGE, rand, [puja]);
+  const underPicture = bubbles.filter((b) => b.x < puja.x + puja.w && b.y > puja.y + puja.h).length;
+  assert.ok(underPicture >= 5, `only ${underPicture} of 40 below the picture`);
+});

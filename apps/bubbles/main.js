@@ -13,6 +13,8 @@ import { spawnFx, stepFx } from '../../kit/fx.js';
 import { say, setSpeechMuted } from '../../kit/speech.js';
 import { createVision } from '../../kit/vision/vision.js';
 import { activeGrid } from '../../kit/vision/body-map.js';
+import { ROOM_KEY, loadRoom } from '../../kit/room/room-map.js';
+import { bbox } from '../../kit/room/shapes.js';
 import { trackHands } from '../../kit/vision/hand-tracker.js';
 import { BUBBLE, fillBubbles, popTouched, spawnBubble, stepBubbles } from './bubbles.js';
 import { BUTTERFLY, populateButterflies, stepButterflies } from './butterflies.js';
@@ -28,7 +30,10 @@ const SURPRISE_LIFE_S = 2.2;
 const BIG_BUBBLE_R = 190;
 const COUNT_RANGE = { bubbles: [3, 14], butterflies: [3, 18] };
 
-const stage = createStage({ key: KEY });
+// With a Room Map, use its projector fit so the traced puja picture lines up, and keep bubbles off it.
+const room = loadRoom();
+const stage = createStage({ key: room.length ? ROOM_KEY : KEY });
+const pictureBoxes = room.filter((s) => s.tag === 'picture').map(bbox);
 const hud = createHud({ title: 'Bubbles & Butterflies 🫧', keys: HELP_KEYS, footer: 'Touch the bubbles! Hold a hand still for butterflies.' });
 const sound = createSound();
 const editor = createEditor({ stage, ledges: false });
@@ -151,9 +156,9 @@ function update(dt, timeMs) {
   if (showBubbles()) {
     const { kept, popped } = popTouched(bubbles, { grid: active.grid, hands: detections });
     if (popped.length) onPop(popped);
-    bubbles = fillBubbles(stepBubbles(kept, dt, stage.size), bubbleCount, stage.size);
+    bubbles = fillBubbles(stepBubbles(kept, dt, stage.size, Math.random, pictureBoxes), bubbleCount, stage.size, Math.random, pictureBoxes);
   } else {
-    bubbles = stepBubbles(bubbles, dt, stage.size).filter((b) => b.y > -b.r); // let the last ones drift away
+    bubbles = stepBubbles(bubbles, dt, stage.size, Math.random, pictureBoxes).filter((b) => b.y > -b.r); // let the last ones drift away
   }
   if (showButterflies()) {
     const before = flock.filter((b) => b.state === 'landed').length;
