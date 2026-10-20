@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import QRCode from 'qrcode';
 import { lanAddresses, remoteUrls } from './kit/network.js';
+import { parsePhoneCamera, snapshotUrl } from './kit/phone-camera.js';
 import { parseClientMessage } from './kit/protocol.js';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
@@ -45,15 +46,72 @@ function resolveSafePath(urlPath) {
   return filePath;
 }
 
+// ---- phone camera (IP Webcam) pass-through --------------------------------------------------------
+let phoneCamera = parsePhoneCamera(process.env.PHONE_CAMERA ?? '', Number(process.env.PHONE_CAMERA_ROTATE) || 0);
+const PHONE_TIMEOUT_MS = 3000;
+const MAX_BODY_BYTES = 1024;
+
+/** Only MayaSabha's own pages may change settings (blocks other websites in the same browser). */
+function sameOriginRequest(req) {
+  try {
+    return new URL(req.headers.origin ?? '').host === req.headers.host;
+  } catch {
+    return false;
+  }
+}
+
+async function readJson(req) {
+  let body = '';
+  for await (const chunk of req) {
+    body += chunk;
+    if (body.length > MAX_BODY_BYTES) throw new Error('body too large');
+  }
+  return JSON.parse(body);
+}
+
+async function handlePhoneCamera(req, res, pathname) {
+  if (pathname === '/api/phone-camera' && req.method === 'POST') {
+    if (!sameOriginRequest(req)) return res.writeHead(403).end('Forbidden');
+    const body = await readJson(req).catch(() => null);
+    const next = body?.base === null ? null : parsePhoneCamera(body?.base, Number(body?.rotate));
+    if (body?.base !== null && !next) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Use the IP Webcam address on your home Wi-Fi, e.g. http://192.168.1.24:8080' }));
+    }
+    phoneCamera = next;
+  }
+  if (pathname === '/api/phone-camera') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify({ success: true, data: phoneCamera }));
+  }
+  if (pathname === '/api/phone-camera/shot.jpg') {
+    if (!phoneCamera) return res.writeHead(404).end('No phone camera set');
+    try {
+      const upstream = await fetch(snapshotUrl(phoneCamera), { signal: AbortSignal.timeout(PHONE_TIMEOUT_MS) });
+      if (!upstream.ok) throw new Error(`phone answered ${upstream.status}`);
+      res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store' });
+      return res.end(Buffer.from(await upstream.arrayBuffer()));
+    } catch (err) {
+      console.warn('phone camera:', err.message);
+      return res.writeHead(502).end('Phone camera not reachable');
+    }
+  }
+  return res.writeHead(404).end('Not found');
+}
+
 // ---- small JSON/SVG API for the home page ------------------------------------------------------
 function currentRemoteUrls() {
   return remoteUrls(lanAddresses(networkInterfaces()), PORT);
 }
 
-async function handleApi(pathname, res) {
+async function handleApi(pathname, res, req) {
+  if (pathname.startsWith('/api/phone-camera')) {
+    await handlePhoneCamera(req, res, pathname);
+    return true;
+  }
   if (pathname === '/api/info') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify({ success: true, data: { port: PORT, remoteUrls: currentRemoteUrls() } }));
+    res.end(JSON.stringify({ success: true, data: { port: PORT, remoteUrls: currentRemoteUrls(), phoneCamera } }));
     return true;
   }
   if (pathname === '/api/remote-qr.svg') {
@@ -75,7 +133,7 @@ const server = createServer(async (req, res) => {
   try {
     const { pathname } = new URL(req.url, 'http://x');
     if (pathname.startsWith('/api/')) {
-      if (!(await handleApi(pathname, res))) res.writeHead(404).end('Not found');
+      if (!(await handleApi(pathname, res, req))) res.writeHead(404).end('Not found');
       return;
     }
     filePath = resolveSafePath(decodeURIComponent(pathname));

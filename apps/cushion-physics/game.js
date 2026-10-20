@@ -2,6 +2,7 @@
 // which (so a cushion that hasn't moved isn't rebuilt every frame), virtual cushions for playing
 // without a camera, and a note per cushion for the musical Marbles mode.
 import { sameOutline } from '../../kit/vision/color-blobs.js';
+import { contains } from '../../kit/room/shapes.js';
 
 export const GAME = Object.freeze({ dropEvery: 1.3, maxItems: 18, goalW: 300, goalH: 120, goalSpots: [0.18, 0.5, 0.82] });
 
@@ -77,4 +78,38 @@ export function virtualPoints(c) {
     const dy = (sy * c.h) / 2;
     return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
   });
+}
+
+/** Top of a polygon at column x (null when x is outside it). */
+function topAtX(points, x) {
+  let best = null;
+  points.forEach((p, i) => {
+    const q = points[(i + 1) % points.length];
+    if ((p.x - x) * (q.x - x) > 0 || p.x === q.x) return;
+    const y = p.y + ((x - p.x) / (q.x - p.x)) * (q.y - p.y);
+    best = best === null ? y : Math.min(best, y);
+  });
+  return best;
+}
+
+/**
+ * Wall mode: Hathi stands on the lowest real surface under his spot (e.g. the sofa backrest),
+ * so fruit can actually reach him instead of piling up on a surface above his head.
+ */
+export function goalOnSurface(stage, spot, solids) {
+  const base = goalRect(stage, spot);
+  const cx = base.x + base.w / 2;
+  const tops = solids.map((s) => topAtX(s.points, cx)).filter((y) => y !== null && y < base.y + base.h);
+  if (!tops.length) return base;
+  return { ...base, y: Math.max(...tops) - base.h };
+}
+
+const middle = (points) => ({
+  x: points.reduce((a, p) => a + p.x, 0) / points.length,
+  y: points.reduce((a, p) => a + p.y, 0) / points.length,
+});
+
+/** Drops detected blobs sitting inside protected pictures (a red puja frame is not a cushion). */
+export function outsidePictures(shapes, pictures) {
+  return shapes.filter((s) => !pictures.some((pic) => contains(pic, middle(s.points))));
 }

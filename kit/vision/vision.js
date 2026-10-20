@@ -2,7 +2,8 @@
 // and every frame offers { grid, hands } in stage coordinates. Also owns the calibration panel
 // (K: click the 4 projected targets in the camera view) and a debug view (I).
 import { loadJson, saveJson } from '../storage.js';
-import { openSource } from './camera.js';
+import { openPhoneSource, openSource } from './camera.js';
+import { serverInfo } from '../server-info.js';
 import { createPoseDetector } from './pose.js';
 import { calibratedMapping, defaultMapping, handsFromPose, occupancyGrid } from './body-map.js';
 import { CALIBRATION_TARGETS, addCalibrationClick, sanitizeCalibration, startCalibration } from './calibration.js';
@@ -57,7 +58,9 @@ export function createVision({ stage, key, hud, pose = true }) {
     starting = true;
     try {
       hud.toast('📷 Starting camera…', 4000);
-      source = await openSource({ videoUrl });
+      // A phone set up on the home page (IP Webcam) is preferred over the laptop's own camera.
+      const phone = videoUrl ? null : (await serverInfo())?.phoneCamera;
+      source = phone ? await openPhoneSource({ rotate: phone.rotate }) : await openSource({ videoUrl });
       if (pose) {
         hud.toast('🧠 Loading body tracking (first time can take a moment)…', 8000);
         detector = detector ?? (await createPoseDetector());

@@ -13,7 +13,7 @@ import { say, setSpeechMuted } from '../../kit/speech.js';
 import { drawFx, spawnFx, stepFx } from '../../kit/fx.js';
 import { createVision } from '../../kit/vision/vision.js';
 import { COLOR_PRESETS, blobOutlines } from '../../kit/vision/color-blobs.js';
-import { GAME, cushionAt, defaultCushions, goalRect, moveCushion, noteFor, spawnX, syncTracked, tickSpawner, virtualPoints } from './game.js';
+import { GAME, cushionAt, defaultCushions, goalOnSurface, goalRect, moveCushion, noteFor, outsidePictures, spawnX, syncTracked, tickSpawner, virtualPoints } from './game.js';
 import { createPhysics } from './physics.js';
 import { ROOM_KEY, loadRoom, solidsFromRoom } from '../../kit/room/room-map.js';
 import { drawField } from './render.js';
@@ -60,8 +60,12 @@ const sctx = sampler.getContext('2d', { willReadFrequently: true });
 
 const persist = () => saveJson(`${KEY}:prefs`, { mode, colour, surface });
 // Wall mode: frames, shelves and other traced objects are solid too (pictures never are).
-const roomSolids = surface === 'wall' ? solidsFromRoom(loadRoom()).map((s) => ({ ...s, version: 1, hue: 45, room: true })) : [];
+const room = surface === 'wall' ? loadRoom() : [];
+const roomSolids = solidsFromRoom(room).map((s) => ({ ...s, version: 1, hue: 45, room: true }));
+const pictures = room.filter((s) => s.tag === 'picture');
 const usingCamera = () => vision.on;
+/** Where Hathi waits: on the real surface under his spot in wall mode, at the bottom otherwise. */
+const currentGoal = () => (roomSolids.length ? goalOnSurface(stage.size, goalSpot, roomSolids) : goalRect(stage.size, goalSpot));
 const hueOf = (id) => [...id].reduce((a, ch) => a + ch.charCodeAt(0) * 37, 0) % 360;
 
 /** Current cushions as polygons in stage px, from the camera or the virtual pillows. */
@@ -71,7 +75,8 @@ function cushionShapes() {
 
 function movableShapes() {
   if (usingCamera()) {
-    return tracked.map((t) => ({ id: t.id, version: t.version, points: t.outline.points.map((p) => vision.mapping.toStage(p)), hue: hueOf(t.id) }));
+    const seen = tracked.map((t) => ({ id: t.id, version: t.version, points: t.outline.points.map((p) => vision.mapping.toStage(p)), hue: hueOf(t.id) }));
+    return outsidePictures(seen, pictures);
   }
   return virtual.map((c) => ({ id: c.id, version: c.version, points: virtualPoints(c), hue: hueOf(c.id) }));
 }
@@ -116,7 +121,7 @@ function setMode(next) {
 
 function moveGoal(delta) {
   goalSpot = Math.max(0, Math.min(GAME.goalSpots.length - 1, goalSpot + delta));
-  physics.setGoal(goalRect(stage.size, goalSpot));
+  physics.setGoal(currentGoal());
 }
 
 function nextColour() {
@@ -222,12 +227,12 @@ async function boot() {
   }
   art = { banana: chars.banana.img, apple: chars.apple.img, orange: chars.orange.img, elephant: chars.elephant.img };
   physics.setBounds(stage.size);
-  physics.setGoal(goalRect(stage.size, goalSpot));
+  physics.setGoal(currentGoal());
   stage.onFrame((dt, t) => {
     const shapes = update(dt, t);
     drawField(stage.ctx, {
       size: stage.size, t, cushions: shapes, virtual: !usingCamera(), flash, items: physics.items(), art,
-      goal: goalRect(stage.size, goalSpot), happy, mode, score, dropX: spawnX(t, stage.size.w),
+      goal: currentGoal(), happy, mode, score, dropX: spawnX(t, stage.size.w),
     });
     drawFx(stage.ctx, particles);
     vision.drawStage(stage.ctx);

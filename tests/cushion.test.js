@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GAME, NOTES, defaultCushions, goalRect, moveCushion, noteFor, spawnX, syncTracked, cushionAt, tickSpawner,
+  GAME, NOTES, defaultCushions, goalRect, outsidePictures, moveCushion, noteFor, spawnX, syncTracked, cushionAt, tickSpawner,
 } from '../apps/cushion-physics/game.js';
 
 const STAGE = { w: 1920, h: 1080 };
@@ -64,4 +64,21 @@ test('each cushion plays its own note from a happy scale', () => {
   assert.equal(noteFor(0), NOTES[0]);
   assert.equal(noteFor(NOTES.length), NOTES[0]);
   assert.ok(NOTES.every((f, i) => i === 0 || f > NOTES[i - 1]));
+});
+
+test('in wall mode Hathi stands on the real surface under him, not hidden below it', async () => {
+  const { goalOnSurface } = await import('../apps/cushion-physics/game.js');
+  const sofaBack = { id: 'sofa', points: [{ x: 130, y: 814 }, { x: 1240, y: 823 }, { x: 1240, y: 850 }, { x: 130, y: 841 }] };
+  const goal = goalOnSurface(STAGE, 1, [sofaBack]);
+  assert.ok(goal.y + goal.h <= 823 && goal.y + goal.h > 790, `goal bottom ${goal.y + goal.h}`);
+  const free = goalOnSurface(STAGE, 2, [sofaBack]); // right spot is past the sofa's end
+  assert.equal(free.y, goalRect(STAGE, 2).y);
+});
+
+test('a red puja picture on the wall is never mistaken for a cushion', () => {
+  const pictures = [{ id: 'puja', kind: 'rect', tag: 'picture', x: 500, y: 0, w: 300, h: 250 }];
+  const square = (id, x, y) => ({ id, points: [{ x, y }, { x: x + 100, y }, { x: x + 100, y: y + 80 }, { x, y: y + 80 }] });
+  const kept = outsidePictures([square('inside', 600, 60), square('cushion', 900, 400)], pictures);
+  assert.deepEqual(kept.map((s) => s.id), ['cushion']);
+  assert.equal(outsidePictures([square('a', 600, 60)], []).length, 1);
 });

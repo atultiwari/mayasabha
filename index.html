@@ -30,6 +30,10 @@
     .remote .url { font: 700 clamp(18px, 2.6vw, 26px)/1.3 ui-monospace, Menlo, monospace; color: #5b2bd6; word-break: break-all; }
     .remote .more { font-size: 14px; color: #5f5880; }
     .remote[hidden], .online-note[hidden] { display: none; }
+    .phonecam { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+    .phonecam input, .phonecam select, .phonecam button { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #c9c2e8; }
+    .phonecam input { width: 230px; }
+    .phonecam button { background: #5b2bd6; color: #fff; border: 0; cursor: pointer; }
     .online-note { margin: 0 0 28px; padding: 14px 18px; border-radius: 14px; background: #221e3a; color: var(--ink); font-size: 15px; }
     .online-note a { color: var(--accent); }
     @media (max-width: 560px) { .remote { flex-direction: column; text-align: center; } }
@@ -57,6 +61,16 @@
         <p>Scan with the phone camera, or type this on a phone on the same Wi-Fi:</p>
         <p class="url" id="remote-url"></p>
         <p class="more" id="remote-more"></p>
+        <form class="phonecam" id="phonecam">
+          <label>📷 Phone as camera (IP Webcam app):
+            <input id="phonecam-base" placeholder="http://192.168.1.24:8080" autocomplete="off" inputmode="url">
+          </label>
+          <select id="phonecam-rotate" aria-label="Turn the picture">
+            <option value="0">upright</option><option value="90">turn right</option><option value="180">upside down</option><option value="270">turn left</option>
+          </select>
+          <button type="submit">Use phone</button>
+          <span id="phonecam-status" class="more"></span>
+        </form>
       </div>
     </section>
     <p class="online-note" id="online-note" hidden>
@@ -140,9 +154,40 @@
         document.getElementById('remote-url').textContent = first;
         if (others.length) document.getElementById('remote-more').textContent = `If that doesn't open, try: ${others.join('  ·  ')}`;
         document.getElementById('remote').hidden = false;
+        setupPhoneCamera(info.phoneCamera);
       } catch (err) {
         console.warn('could not load remote address', err);
       }
+    }
+    /** Phone camera: remembered in this browser and restored to the server after a restart. */
+    async function setupPhoneCamera(current) {
+      const form = document.getElementById('phonecam');
+      const base = document.getElementById('phonecam-base');
+      const rotate = document.getElementById('phonecam-rotate');
+      const status = document.getElementById('phonecam-status');
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem('mayasabha:phone-camera') || 'null'); } catch { saved = null; }
+      const shown = current ?? saved;
+      if (shown) { base.value = shown.base; rotate.value = String(shown.rotate ?? 0); }
+      async function send(value) {
+        const res = await fetch('/api/phone-camera', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'Could not save');
+        return body.data;
+      }
+      if (!current && saved) send(saved).then(() => { status.textContent = '✓ phone camera restored'; }).catch(() => {});
+      else if (current) status.textContent = '✓ in use';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const data = await send({ base: base.value, rotate: Number(rotate.value) });
+          localStorage.setItem('mayasabha:phone-camera', JSON.stringify(data));
+          const test = await fetch('/api/phone-camera/shot.jpg', { cache: 'no-store' });
+          status.textContent = test.ok ? '✓ phone camera works' : '⚠ saved, but the phone did not answer: is IP Webcam running?';
+        } catch (err) {
+          status.textContent = `⚠ ${err.message}`;
+        }
+      });
     }
     showRemote();
   </script>
