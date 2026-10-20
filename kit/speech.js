@@ -11,10 +11,14 @@ function voiceFor(lang) {
   return voices.find((v) => v.lang?.toLowerCase().startsWith(lang)) ?? null;
 }
 
-/** @param {string} text @param {{ force?: boolean, lang?: string }} [opts] lang: 'en' | 'hi' … */
-export function say(text, { force = false, lang = null } = {}) {
+/**
+ * @param {string} text
+ * @param {{ force?: boolean, queue?: boolean, lang?: string }} [opts]
+ *   force: interrupt whatever is being said; queue: wait for it (story narration); lang: 'en' | 'hi' …
+ */
+export function say(text, { force = false, queue = false, lang = null } = {}) {
   const now = performance.now();
-  if (muted || (!force && now - lastSpoken < MIN_GAP_MS)) return;
+  if (muted || (!force && !queue && now - lastSpoken < MIN_GAP_MS)) return;
   try {
     if (!window.speechSynthesis) return;
     const u = new SpeechSynthesisUtterance(text);
@@ -35,4 +39,5 @@ export function say(text, { force = false, lang = null } = {}) {
 
 export function setSpeechMuted(value) {
   muted = value;
+  if (value) window.speechSynthesis?.cancel();
 }

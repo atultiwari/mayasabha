@@ -110,6 +110,25 @@ orbiting at their true relative speeds (sped up). Fly to any body and hear its n
 Hindi narration uses your computer's Hindi voice (on macOS: System Settings → Accessibility → Spoken
 Content → add a Hindi voice such as Lekha).
 
+### Rocket Ride to Chanda Mama 🚀🌝 (bedtime story)
+
+A 8–10 minute bilingual (English / हिन्दी) bedtime story where **your child is the hero** (press N to type
+their name; it stays in that browser). A co-pilot (the pet character) flies along. Each stop needs one
+small action, from a real clap (microphone), a wave (camera or mouse), a pop or a count, or from the phone:
+
+1. **Launch:** clap three times to count down, then blast off.
+2. **The Moon (Chanda Mama):** clap to jump high and leave footprints.
+3. **Mars:** wave away the dust storm to find a little robot.
+4. **Jupiter:** pop the storm bubbles.
+5. **Saturn:** slide around the rings and count the moons.
+6. **The Sun:** sunglasses on! Wave goodbye.
+7. **Home:** every planet says goodnight and falls asleep, then the screen fades to dark.
+
+Nobody can fail: every action also finishes by itself after a while, and the phone has a **Help**
+button. ← → skip chapters, R restarts, L switches language.
+
+![Rocket Ride](docs/rocket-ride.png)
+
 ## Quick start
 
 ```bash
@@ -171,6 +190,7 @@ apps/room-pet/    the puppy: pure state-machine brain, fruit physics, visitors, 
 apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
 apps/bubbles/     bubbles that pop on touch, butterflies that land on still hands
 apps/solar-system/  three.js solar system: orbit maths, scene, camera views, bilingual narration
+apps/rocket-ride/   bedtime story: pure story engine, bilingual script, cartoon planets with faces
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
@@ -185,7 +205,7 @@ npm run coverage
 
 ## Ideas for what's next
 
-A cartoon rocket-ride bedtime story through the planets, floor puddles to stomp on, cushion drums,
+Floor puddles to stomp on, cushion drums,
 sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contributions welcome.
 
 ## Credits
