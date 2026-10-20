@@ -4,7 +4,7 @@
   "private": true,
   "description": "MayaSabha: turn your living room into a hall of illusions. Browser-based projection-mapping kit and activities for kids and families",
   "license": "MIT",
-  "author": "Atul Tiwari",
+  "author": "Dr. Atul Tiwari (https://atultiwari.in/)",
   "repository": {
     "type": "git",
     "url": "https://github.com/atultiwari/mayasabha.git"
