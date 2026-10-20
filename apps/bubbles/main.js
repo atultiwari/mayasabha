@@ -12,6 +12,7 @@ import { loadCharacters, resolveCharacters } from '../../kit/characters.js';
 import { spawnFx, stepFx } from '../../kit/fx.js';
 import { say, setSpeechMuted } from '../../kit/speech.js';
 import { createVision } from '../../kit/vision/vision.js';
+import { activeGrid } from '../../kit/vision/body-map.js';
 import { trackHands } from '../../kit/vision/hand-tracker.js';
 import { BUBBLE, fillBubbles, popTouched, spawnBubble, stepBubbles } from './bubbles.js';
 import { BUTTERFLY, populateButterflies, stepButterflies } from './butterflies.js';
@@ -136,15 +137,19 @@ function onPop(popped) {
   }
 }
 
+let bodyAges = null;
+
 function update(dt, timeMs) {
   const seen = vision.update(timeMs);
+  const active = activeGrid(bodyAges, seen.grid, dt);
+  bodyAges = active.ages;
   mouse = mouse ? { ...mouse, idle: mouse.idle + dt } : null;
   const mouseAt = (limit) => (mouse && mouse.idle < limit ? [{ x: mouse.x, y: mouse.y }] : []);
   const detections = [...seen.hands, ...mouseAt(MOUSE_POP_IDLE_S)];
   tracks = trackHands(tracks, [...seen.hands, ...mouseAt(MOUSE_PERCH_IDLE_S)], dt);
 
   if (showBubbles()) {
-    const { kept, popped } = popTouched(bubbles, { grid: seen.grid, hands: detections });
+    const { kept, popped } = popTouched(bubbles, { grid: active.grid, hands: detections });
     if (popped.length) onPop(popped);
     bubbles = fillBubbles(stepBubbles(kept, dt, stage.size), bubbleCount, stage.size);
   } else {

@@ -66,3 +66,16 @@ test('calibration collects 4 clicks, then produces a mapping', () => {
   assert.equal(c.done, true);
   assert.equal(c.points.length, 4);
 });
+
+test('a body that stays still (a parent lying on the sofa) stops counting after a while; a moving child keeps counting', async () => {
+  const { activeGrid } = await import('../kit/vision/body-map.js');
+  const grid = (cells) => ({ cols: 3, rows: 1, cellW: 10, cellH: 10, cells: Uint8Array.from(cells) });
+  let state = activeGrid(null, grid([1, 1, 0]), 0.5);
+  assert.deepEqual([...state.grid.cells], [1, 1, 0]); // new arrivals count
+  for (let i = 0; i < 4; i += 1) state = activeGrid(state.ages, grid([1, 0, 0]), 0.5);
+  state = activeGrid(state.ages, grid([1, 0, 1]), 0.5);
+  assert.deepEqual([...state.grid.cells], [0, 0, 1]); // cell 0 held still for 3 s; cell 2 just arrived
+  state = activeGrid(state.ages, grid([0, 1, 1]), 0.5);
+  assert.deepEqual([...state.grid.cells], [0, 1, 1]); // leaving and coming back counts again
+  assert.equal(activeGrid(null, null, 0.5).grid, null);
+});

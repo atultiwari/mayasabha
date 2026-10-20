@@ -55,6 +55,26 @@ export function occupancyGrid(mask, mapping, stage, cols, rows) {
   return { cols, rows, cellW, cellH, cells };
 }
 
+const STILL_S = 2;
+
+/**
+ * Keeps only body cells that arrived recently, so someone sitting or lying still (a parent on the
+ * sofa) stops popping things while a moving child keeps playing. `ages` is how long each cell has
+ * been covered without a break; pass the returned ages back in next frame.
+ * @returns {{ ages: Float32Array | null, grid: object | null }}
+ */
+export function activeGrid(ages, grid, dt, stillS = STILL_S) {
+  if (!grid) return { ages: null, grid: null };
+  const prev = ages && ages.length === grid.cells.length ? ages : new Float32Array(grid.cells.length);
+  const next = new Float32Array(grid.cells.length);
+  const cells = new Uint8Array(grid.cells.length);
+  grid.cells.forEach((on, i) => {
+    next[i] = on ? prev[i] + dt : 0;
+    cells[i] = on && next[i] <= stillS ? 1 : 0;
+  });
+  return { ages: next, grid: { ...grid, cells } };
+}
+
 /** 1 if the body covers stage point p, else 0. */
 export function gridAt(grid, p) {
   if (!grid) return 0;
