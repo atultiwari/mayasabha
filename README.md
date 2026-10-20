@@ -21,7 +21,7 @@ fully offline on your home Wi-Fi.
 - **Your phone is the remote:** scan the QR code on the home page; buttons appear for whatever is running.
 - **Clap to play:** the microphone detects claps and shouts (no audio leaves the computer).
 - **Your own characters:** swap in pictures of your child's favourites, kept private and out of git.
-- Plain JavaScript ES modules, no build step, one small Node server, 48 unit tests.
+- Plain JavaScript ES modules, no build step, one small Node server, 60+ unit tests.
 
 ## Activities
 
@@ -68,12 +68,34 @@ down over the edge**. Bedtime mode fades the stars to black over ten minutes.
 Switch ceiling fans off while projecting. The shaft walls fade to black at the rim, so the border of the
 projection melts into the real ceiling.
 
+### Bubbles & Butterflies 🫧🦋 (camera)
+
+Giant soap bubbles float up the wall and **pop wherever a child touches them**; some hide a favourite
+character or a fruit that pops out and says its name. **Butterflies land on a hand held still** and scatter
+when someone swipes. Tracking uses the camera (MediaPipe pose with a body mask, all on-device); the mouse
+works as a hand too.
+
+| Key | Phone | What happens |
+|---|---|---|
+| 1 2 3 | 🫧 🦋 ✨ | Bubbles / butterflies / both |
+| Space | 🎁 | A big bubble with a surprise inside (phone: choose who) |
+| [ ] | ➕ ➖ | Fewer / more |
+| C | 📷 | Camera on/off |
+| K | – | Calibrate: click the 4 projected dots in the camera view |
+| X | – | Mirror (camera faces the players instead of the wall) |
+| I | – | Show what the camera sees (body mask, hands) |
+
+Camera setup: put the camera next to the projector, facing the wall, then press **C** and **K**. Run
+`npm run setup` once to keep tracking fully offline (otherwise it loads from a CDN). To try it without a
+camera, open `apps/bubbles/?video=<path-to-a-video>`.
+
 ## Quick start
 
 ```bash
 git clone https://github.com/atultiwari/mayasabha.git
 cd mayasabha
 npm install
+npm run setup   # once: offline body tracking for camera activities
 npm start
 ```
 
@@ -122,8 +144,11 @@ kit/              shared modules every activity uses
   mic.js clap.js  microphone loudness -> clap events
   sound.js        synthesised sound effects (no audio files)
   remote-link.js  phone remote over a LAN WebSocket relay (protocol.js validates every message)
+  vision/         camera, MediaPipe pose + body mask, camera-to-wall calibration, hand tracking
+  speech.js fx.js spoken names, particle bursts
 apps/room-pet/    the puppy: pure state-machine brain, fruit physics, visitors, renderer
 apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
+apps/bubbles/     bubbles that pop on touch, butterflies that land on still hands
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
@@ -138,7 +163,7 @@ npm run coverage
 
 ## Ideas for what's next
 
-Bubble-pop and butterfly walls with MediaPipe hand tracking, floor puddles to stomp on, cushion drums,
+A solar-system adventure, floor puddles to stomp on, cushion drums,
 sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contributions welcome.
 
 ## Credits

@@ -25,6 +25,10 @@ const TYPES = {
   '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
+  '.wasm': 'application/wasm',
+  '.task': 'application/octet-stream',
+  '.mp4': 'video/mp4',
+  '.webp': 'image/webp',
 };
 const BLOCKED_DIRS = ['/node_modules/', '/tests/'];
 const BLOCKED_FILES = new Set(['server.mjs', 'package.json', 'package-lock.json']);

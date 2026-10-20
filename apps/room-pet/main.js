@@ -13,7 +13,7 @@ import { GROUND_ID, clampToLedge, makeGround, makeLedge, removeNearest, sanitize
 import { createPet, petEvent, updatePet } from './brain.js';
 import { biteFruit, removeFruit, spawnFruit, stepFruits } from './fruit.js';
 import { FRIEND_KINDS, spawnFriend, stepFriends } from './friends.js';
-import { spawnFx, stepFx } from './fx.js';
+import { spawnFx, stepFx } from '../../kit/fx.js';
 import { drawScene } from './render.js';
 import { DEMO_SCRIPT, HELP_KEYS, KEYS } from './controls.js';
 import { loadCharacters, remoteLayout, resolveCharacters } from '../../kit/characters.js';

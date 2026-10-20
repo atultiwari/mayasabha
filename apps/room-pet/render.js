@@ -1,7 +1,7 @@
 // Draws the room-pet scene on a black stage. Characters are flat images (Noto 3D emoji or your own) brought to
 // life with "paper puppet" motion: squash and stretch, bobbing, tilting and flipping.
 import { FRUIT } from './fruit.js';
-import { drawFx } from './fx.js';
+import { drawFx } from '../../kit/fx.js';
 
 /** Body pose for the puppy's current mode. Returns offsets in units of `size`. */
 export function petPose(pet, t, size) {

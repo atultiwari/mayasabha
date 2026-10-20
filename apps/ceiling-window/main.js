@@ -5,6 +5,7 @@ import { createEditor } from '../../kit/editor.js';
 import { createHud } from '../../kit/hud.js';
 import { createSound } from '../../kit/sound.js';
 import { connectRemote } from '../../kit/remote-link.js';
+import { say, setSpeechMuted } from '../../kit/speech.js';
 import { serverInfo } from '../../kit/server-info.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
 import { loadCharacters, resolveCharacters } from '../../kit/characters.js';
@@ -49,25 +50,13 @@ const sceneKeyOf = (name) => (name === 'peekaboo' ? 'sky' : name); // peek-a-boo
 const recipeOf = (name) => SCENES[sceneKeyOf(name)];
 
 // ---- actions ----------------------------------------------------------------------------------
-function say(text) {
-  try {
-    if (!window.speechSynthesis) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.pitch = 1.5;
-    u.rate = 0.9;
-    window.speechSynthesis.speak(u);
-  } catch (err) {
-    console.warn('speech unavailable', err);
-  }
-}
-
 function peekIn(role) {
   if (peek || !chars) return;
   const who = role ?? PEEKERS[peekIndex % PEEKERS.length];
   peekIndex += 1;
   peek = startPeek(who, pickEdge(Math.random()), 0.25 + Math.random() * 0.5);
   sound.play('boing');
-  setTimeout(() => say(`Peek-a-boo! ${chars[who].label}!`), 700);
+  setTimeout(() => say(`Peek-a-boo! ${chars[who].label}!`, { force: true }), 700);
 }
 
 function setScene(name, { keepBedtime = false } = {}) {
@@ -108,7 +97,11 @@ const ACTIONS = {
   shallower: () => nudgeView(0, 0, DEPTH_STEP), deeper: () => nudgeView(0, 0, -DEPTH_STEP),
   turn: () => { stage.setCorners(rotateCorners180(stage.corners)); hud.toast('🔄 Picture turned around'); },
   edit: () => editor.toggle(), fullscreen: () => stage.toggleFullscreen(), help: () => hud.toggleHelp(),
-  mute: () => hud.toast(sound.toggleMute() ? '🔇 Muted' : '🔊 Sound on'),
+  mute: () => {
+    const muted = sound.toggleMute();
+    setSpeechMuted(muted);
+    hud.toast(muted ? '🔇 Muted' : '🔊 Sound on');
+  },
   ...Object.fromEntries(PEEKERS.map((role) => [`peek-${role}`, () => peekIn(role)])),
 };
 

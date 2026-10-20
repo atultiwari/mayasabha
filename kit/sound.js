@@ -86,6 +86,7 @@ export function createSound() {
       note({ type: 'sawtooth', from: 520, to: 440, dur: 0.6, gain: 0.2, at: 0.22, vibrato: 25 });
     },
     monkey: () => [0, 0.18, 0.36].forEach((at, i) => note({ from: 500 + i * 120, to: 900 + i * 200, dur: 0.15, gain: 0.25, at })),
+    tinkle: () => [0, 0.07, 0.14].forEach((at, i) => note({ from: 1568 + i * 330, dur: 0.18, gain: 0.08, at })),
     honk: () => [0, 0.2].forEach((at) => note({ type: 'square', from: 520, to: 430, dur: 0.14, gain: 0.12, at })),
     squeak: () => [0, 0.12].forEach((at) => note({ from: 2400, to: 3200, dur: 0.07, gain: 0.15, at })),
     snore: () => noise({ dur: 0.9, freq: 160, q: 3, gain: 0.25 }),
