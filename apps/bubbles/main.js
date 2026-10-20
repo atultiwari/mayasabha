@@ -1,5 +1,5 @@
 // Bubbles & Butterflies: giant bubbles float up the wall and pop when a child touches them (some
-// hide a favourite character); butterflies land on a hand held still and scatter on a swipe.
+// hide a favourite character); butterflies gather around the child's arms and body, and scatter on a swipe.
 // Tracking comes from the camera (MediaPipe pose + body mask); the mouse works as a hand too.
 // Test without a camera: add ?video=<url> to use a video file as the camera.
 import { createStage } from '../../kit/stage.js';
@@ -34,7 +34,7 @@ const COUNT_RANGE = { bubbles: [3, 14], butterflies: [3, 18] };
 const room = loadRoom();
 const stage = createStage({ key: room.length ? ROOM_KEY : KEY });
 const pictureBoxes = room.filter((s) => s.tag === 'picture').map(bbox);
-const hud = createHud({ title: 'Bubbles & Butterflies 🫧', keys: HELP_KEYS, footer: 'Touch the bubbles! Hold a hand still for butterflies.' });
+const hud = createHud({ title: 'Bubbles & Butterflies 🫧', keys: HELP_KEYS, footer: 'Touch the bubbles! Stand by the wall and the butterflies come to you.' });
 const sound = createSound();
 const editor = createEditor({ stage, ledges: false });
 const vision = createVision({ stage, key: KEY, hud });
@@ -125,7 +125,7 @@ const remote = connectRemote({ role: 'stage', layout: wallLayout(chars), onMessa
 async function showRemoteAddress() {
   const info = await serverInfo();
   const [url] = info?.remoteUrls ?? [];
-  hud.setFooter(`Touch the bubbles! Hold a hand still for butterflies.  ${url ? `📱 ${url}` : '(online version: keyboard only)'}`);
+  hud.setFooter(`Touch the bubbles! Stand by the wall and the butterflies come to you.  ${url ? `📱 ${url}` : '(online version: keyboard only)'}`);
 }
 showRemoteAddress();
 
@@ -162,7 +162,7 @@ function update(dt, timeMs) {
   }
   if (showButterflies()) {
     const before = flock.filter((b) => b.state === 'landed').length;
-    flock = stepButterflies(flock, tracks, dt, stage.size);
+    flock = stepButterflies(flock, tracks, dt, stage.size, Math.random, seen.body);
     if (flock.filter((b) => b.state === 'landed').length > before) sound.play('tinkle');
   }
   surprises = surprises.map((s) => ({ ...s, age: s.age + dt })).filter((s) => s.age < SURPRISE_LIFE_S);

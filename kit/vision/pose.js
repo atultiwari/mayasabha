@@ -1,7 +1,7 @@
 // MediaPipe pose detection: body landmarks (for hands) plus a person mask (for the whole body) from
 // one small model. People lying down (a parent on the sofa) are left out of both. Loads from vendor/ when `npm run setup` has been run, otherwise from the CDN.
 
-import { fromFocus, isLyingDown } from './body-map.js';
+import { fromFocus, isLyingDown, isWideShape } from './body-map.js';
 
 const VERSION = '1.0.1';
 const LOCAL = {
@@ -44,14 +44,19 @@ function mergeMasks(masks, keep) {
   if (!masks?.length) return null;
   const { width, height } = masks[0];
   const data = new Float32Array(width * height);
-  masks.forEach((m, i) => {
-    if (keep[i] !== false) {
-      const src = m.getAsFloat32Array();
-      for (let j = 0; j < data.length; j += 1) if (src[j] > data[j]) data[j] = src[j];
-    }
-    m.close();
+  masks.forEach((src, i) => {
+    if (keep[i] !== false) for (let j = 0; j < data.length; j += 1) if (src.data[j] > data[j]) data[j] = src.data[j];
   });
   return { width, height, data };
+}
+
+/** Copies each person's mask out of MediaPipe (and frees it) so it can be checked and merged. */
+function readMasks(masks) {
+  return (masks ?? []).map((m) => {
+    const copy = { width: m.width, height: m.height, data: Float32Array.from(m.getAsFloat32Array()) };
+    m.close();
+    return copy;
+  });
 }
 
 /**
@@ -96,9 +101,12 @@ export async function createPoseDetector() {
       const result = landmarker.detectForVideo(whole ? video : cutOut(video, area), timeMs);
       const all = (result.landmarks ?? []).map((lm) => lm.map((p) => fromFocus(p, area)));
       const aspect = video.videoWidth / (video.videoHeight || 1);
-      const keep = all.map((lm) => !isLyingDown(lm, aspect));
+      const masks = readMasks(result.segmentationMasks);
+      // Mask pixels span the tracked area, which needn't be square.
+      const pixelAspect = masks[0] ? ((area.w * video.videoWidth) / masks[0].width) / ((area.h * video.videoHeight) / masks[0].height) : 1;
+      const keep = all.map((lm, i) => !isLyingDown(lm, aspect) && !(masks[i] && isWideShape(masks[i], pixelAspect)));
       const lying = keep.filter((k) => !k).length;
-      const mask = mergeMasks(result.segmentationMasks, keep);
+      const mask = mergeMasks(masks, keep);
       return { poses: all.filter((_, i) => keep[i]), mask: mask && { ...mask, area }, seen: all.length, lying };
     },
   };

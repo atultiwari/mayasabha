@@ -5,7 +5,7 @@ import { loadJson, saveJson } from '../storage.js';
 import { openPhoneSource, openSource } from './camera.js';
 import { serverInfo } from '../server-info.js';
 import { createPoseDetector } from './pose.js';
-import { calibratedMapping, defaultMapping, focusArea, handsFromPose, occupancyGrid } from './body-map.js';
+import { bodyFromPose, calibratedMapping, defaultMapping, focusArea, handsFromPose, occupancyGrid } from './body-map.js';
 import { CALIBRATION_TARGETS, addCalibrationClick, sanitizeCalibration, startCalibration } from './calibration.js';
 
 const GRID = { cols: 48, rows: 27 };
@@ -159,7 +159,7 @@ export function createVision({ stage, key, hud, pose = true }) {
     ctx.strokeRect(x, y, w, h); // the zoomed-in area that tracking looks at
   }
 
-  /** Runs detection on the newest frame. @returns {{ grid: object|null, hands: {x:number,y:number}[] }} */
+  /** Runs detection on the newest frame. @returns {{ grid: object|null, hands: {x:number,y:number}[], body: object|null }} */
   function update(timeMs) {
     if (source && detector) {
       try {
@@ -171,6 +171,7 @@ export function createVision({ stage, key, hud, pose = true }) {
             mask: res.mask,
             grid: res.mask ? occupancyGrid(res.mask, mapping, stage.size, GRID.cols, GRID.rows) : null,
             hands: handsFromPose(res.poses, mapping),
+            body: bodyFromPose(res.poses, mapping),
           };
         }
       } catch (err) {
@@ -178,7 +179,7 @@ export function createVision({ stage, key, hud, pose = true }) {
       }
     }
     drawPanel();
-    return { grid: latest.grid, hands: latest.hands };
+    return { grid: latest.grid, hands: latest.hands, body: latest.body ?? null };
   }
 
   /** Draws calibration targets (and, in debug, what the camera thinks) onto the stage. */

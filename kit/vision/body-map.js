@@ -154,3 +154,62 @@ export function handsFromPose(poses, mapping) {
   }
   return hands;
 }
+
+// Arm chains per side: shoulder, elbow, wrist, index finger.
+const ARMS = [[11, 13, 15, 19], [12, 14, 16, 20]];
+const NOSE = 0;
+
+const seen = (p) => p && p.visibility >= VISIBLE;
+
+/**
+ * The child's shape in stage px, for butterflies to gather around: head, shoulders and arms (each
+ * shoulder→elbow→wrist→finger, visible parts only). With several upright people it picks the
+ * smallest (the child, not a grown-up walking past). Null when nobody's shoulders are seen.
+ * @returns {{ head: {x,y}, shoulders: {x,y}[], arms: {x,y}[][], size: number } | null}
+ */
+export function bodyFromPose(poses, mapping) {
+  const people = (poses ?? []).map((lm) => personShape(lm, mapping)).filter(Boolean);
+  if (!people.length) return null;
+  return people.reduce((a, b) => (b.size < a.size ? b : a));
+}
+
+function personShape(lm, mapping) {
+  if (!seen(lm[11]) || !seen(lm[12])) return null;
+  const at = (i) => mapping.toStage(lm[i]);
+  const shoulders = [at(11), at(12)];
+  const mid = { x: (shoulders[0].x + shoulders[1].x) / 2, y: (shoulders[0].y + shoulders[1].y) / 2 };
+  const width = Math.max(40, Math.hypot(shoulders[0].x - shoulders[1].x, shoulders[0].y - shoulders[1].y));
+  const hips = seen(lm[23]) && seen(lm[24]) ? [at(23), at(24)] : null;
+  const size = hips ? Math.hypot(mid.x - (hips[0].x + hips[1].x) / 2, mid.y - (hips[0].y + hips[1].y) / 2) : width * 1.6;
+  const head = seen(lm[NOSE]) ? at(NOSE) : { x: mid.x, y: mid.y - width * 0.8 };
+  const arms = ARMS.map((chain) => {
+    const visible = [];
+    for (const i of chain) {
+      if (!seen(lm[i])) break; // an arm is only useful from the shoulder outwards
+      visible.push(at(i));
+    }
+    return visible;
+  }).filter((arm) => arm.length >= 2);
+  return { head, shoulders, hips, arms, size };
+}
+
+const WIDE = 1.3; // a standing child, even with arms out, is about as wide as tall
+
+/**
+ * True when one person's outline (their own mask) is much wider than tall: someone lying on the
+ * sofa, even when the skeleton is fitted onto raised knees and looks upright.
+ * @param {number} pixelAspect width / height of one mask pixel in the real picture
+ */
+export function isWideShape(mask, pixelAspect = 1) {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -1, -1];
+  for (let y = 0; y < mask.height; y += 1) {
+    for (let x = 0; x < mask.width; x += 1) {
+      if (mask.data[y * mask.width + x] > MASK_ON) {
+        x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      }
+    }
+  }
+  if (x1 < 0) return false;
+  return ((x1 - x0 + 1) * pixelAspect) / (y1 - y0 + 1) > WIDE;
+}

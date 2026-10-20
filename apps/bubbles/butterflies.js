@@ -1,11 +1,12 @@
-// Butterflies that flutter around the wall, come and settle on a hand held still, ride along if it
-// moves slowly, and scatter when something swipes past. Pure and immutable.
+// Butterflies that flutter around the wall. When a child is in view they gather into his shape (most
+// along his arms and hands, a few around his head) and follow him; without one they come and settle
+// on a hand held still (the mouse), and scatter when something swipes past. Pure and immutable.
 import { HANDS } from '../../kit/vision/hand-tracker.js';
 
 export const BUTTERFLY = Object.freeze({
-  count: 9, speed: 130, approachSpeed: 230, fleeSpeed: 460, fleeFor: 1.2,
+  count: 14, speed: 190, approachSpeed: 230, gatherSpeed: 420, armShare: 0.65, fleeSpeed: 460, fleeFor: 1.2,
   scareSpeed: 500, scareRadius: 300, landRadius: 1100, landRingMin: 40, landRingMax: 110,
-  wander: 2.5, margin: 140, size: [55, 80], palettes: 5,
+  wander: 3.5, margin: 140, size: [55, 80], palettes: 5,
 });
 
 let counter = 0;
@@ -71,10 +72,60 @@ function landed(b, hand, dt) {
   return { ...b, x: b.x + (target.x - b.x) * k, y: b.y + (target.y - b.y) * k };
 }
 
-function stepOne(b, hands, dt, stage, rng) {
+/** A point `t` (0..1) of the way along a polyline. */
+function along(points, t) {
+  const lengths = points.slice(1).map((q, i) => Math.hypot(q.x - points[i].x, q.y - points[i].y));
+  let left = t * lengths.reduce((a, l) => a + l, 0);
+  for (let i = 0; i < lengths.length; i += 1) {
+    if (left <= lengths[i] || i === lengths.length - 1) {
+      const k = lengths[i] ? Math.min(1, left / lengths[i]) : 0;
+      const [a, b] = [points[i], points[i + 1]];
+      return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, dx: b.x - a.x, dy: b.y - a.y };
+    }
+    left -= lengths[i];
+  }
+  return { ...points[0], dx: 0, dy: 1 };
+}
+
+function armSlots(arms, n) {
+  return Array.from({ length: n }, (_, k) => {
+    const arm = arms[k % arms.length];
+    const j = Math.floor(k / arms.length);
+    const perArm = Math.ceil(n / arms.length);
+    const p = along(arm, 0.3 + 0.7 * ((j + 0.5) / perArm)); // from upper arm out to the hand
+    const len = Math.hypot(p.dx, p.dy) || 1;
+    const side = (j % 2 ? 1 : -1) * (24 + 12 * (j % 3));
+    return { x: p.x - (p.dy / len) * side, y: p.y + (p.dx / len) * side };
+  });
+}
+
+function bodySlots(body, n) {
+  const [l, r] = body.shoulders;
+  const width = Math.max(60, Math.hypot(l.x - r.x, l.y - r.y));
+  const ring = (angle, k) => ({ x: body.head.x + Math.cos(angle) * width * k, y: body.head.y + Math.sin(angle) * width * k });
+  const around = [-90, -135, -45, -170, -10].map((deg) => (deg * Math.PI) / 180);
+  return Array.from({ length: n }, (_, k) => ring(around[k % around.length], 0.75 + 0.3 * Math.floor(k / around.length)));
+}
+
+/** Where each butterfly hovers on the child: `armShare` of them along the arms and hands, the rest around the head. */
+export function formationSlots(body, count) {
+  const onArms = body.arms.length ? Math.round(count * BUTTERFLY.armShare) : 0;
+  return [...armSlots(body.arms, onArms), ...bodySlots(body, count - onArms)];
+}
+
+function gather(b, slot, dt) {
+  const target = { x: slot.x + Math.cos(b.phase * 0.7) * 14, y: slot.y + Math.sin(b.phase * 1.1) * 10 }; // a little flutter
+  const dist = Math.hypot(target.x - b.x, target.y - b.y);
+  const heading = dist > 1 ? Math.atan2(target.y - b.y, target.x - b.x) : b.heading;
+  return move({ ...b, heading, state: 'gather', handId: null }, Math.min(BUTTERFLY.gatherSpeed, dist * 4), dt);
+}
+
+function stepOne(b, hands, dt, stage, rng, slot) {
   const flap = { phase: b.phase + dt * (b.state === 'landed' ? 3 : 14) };
   const scared = b.state !== 'flee' ? scare(b, hands) : null;
   if (scared) return { ...scared, ...flap };
+  if (slot && b.state !== 'flee') return { ...gather(b, slot, dt), ...flap };
+  if (b.state === 'gather') return { ...b, ...flap, state: 'fly' };
   const hand = hands.find((h) => h.id === b.handId);
   switch (b.state) {
     case 'flee': {
@@ -88,7 +139,11 @@ function stepOne(b, hands, dt, stage, rng) {
   }
 }
 
-/** Moves every butterfly. `hands` are hand tracks from kit/vision/hand-tracker.js (stage px). */
-export function stepButterflies(flock, hands, dt, stage, rng = Math.random) {
-  return flock.map((b) => stepOne(b, hands, dt, stage, rng));
+/**
+ * Moves every butterfly. `hands` are hand tracks from kit/vision/hand-tracker.js (stage px); `body`
+ * is the child's shape from bodyFromPose (null when nobody is in view).
+ */
+export function stepButterflies(flock, hands, dt, stage, rng = Math.random, body = null) {
+  const slots = body ? formationSlots(body, flock.length) : [];
+  return flock.map((b, i) => stepOne(b, hands, dt, stage, rng, slots[i]));
 }

@@ -116,3 +116,18 @@ test('occupancy grid reads a mask that covers only the zoomed area', () => {
   const g = occupancyGrid(mask, defaultMapping({ w: 4, h: 4 }, false), { w: 4, h: 4 }, 4, 4);
   assert.deepEqual([...g.cells], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 });
+
+test('a person whose outline is much wider than tall is lying down, even if the skeleton is fooled', async () => {
+  const { isWideShape } = await import('../kit/vision/body-map.js');
+  const mask = (w, h, box) => {
+    const data = new Float32Array(w * h);
+    for (let y = box.y; y < box.y + box.h; y += 1) for (let x = box.x; x < box.x + box.w; x += 1) data[y * w + x] = 1;
+    return { width: w, height: h, data };
+  };
+  assert.equal(isWideShape(mask(100, 100, { x: 10, y: 40, w: 70, h: 20 })), true); // lying on the sofa
+  assert.equal(isWideShape(mask(100, 100, { x: 40, y: 20, w: 20, h: 60 })), false); // standing child
+  assert.equal(isWideShape(mask(100, 100, { x: 40, y: 30, w: 30, h: 30 })), false); // sitting up
+  // Pixels aren't square when the tracked area isn't: 30x20 pixels of a 1:2 frame is tall.
+  assert.equal(isWideShape(mask(100, 100, { x: 10, y: 40, w: 30, h: 20 }), 0.5), false);
+  assert.equal(isWideShape(mask(10, 10, { x: 0, y: 0, w: 0, h: 0 })), false);
+});
