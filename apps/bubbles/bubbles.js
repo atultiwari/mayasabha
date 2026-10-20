@@ -5,7 +5,10 @@ import { gridAt } from '../../kit/vision/body-map.js';
 export const BUBBLE = Object.freeze({ rMin: 70, rMax: 130, speed: [45, 95], sway: 30, surpriseChance: 0.3, count: 7,
   // Safety: only the middle of the wall, so a child reaching for bubbles stays away from corners
   // and sofa arms. More bubbles near the centre than at the band's edges.
-  band: [0.25, 0.75] });
+  band: [0.25, 0.75],
+  // New bubbles are blown in mid-wall at a child's reach rather than rising from the floor, where the
+  // child stands and would pop them unseen. They can't pop while appearing.
+  appearBand: [0.4, 0.8], appearS: 1 });
 export const SURPRISES = Object.freeze(['pet', 'elephant', 'monkey', 'mouse', 'penguin', 'banana', 'apple', 'orange']);
 const RING = 8; // body samples around each bubble
 const HAND_REACH = 0.95; // of the radius
@@ -20,14 +23,14 @@ export function spawnBubble(stage, rng, fresh) {
   const x0 = lo + ((rng() + rng()) / 2) * Math.max(0, hi - lo);
   return {
     id: `b${counter}`, r, x0, x: x0,
-    y: fresh ? stage.h + r + rng() * 200 : r + rng() * (stage.h - r),
+    y: fresh ? stage.h * (BUBBLE.appearBand[0] + rng() * (BUBBLE.appearBand[1] - BUBBLE.appearBand[0])) : r + rng() * (stage.h - r),
     vy: BUBBLE.speed[0] + rng() * (BUBBLE.speed[1] - BUBBLE.speed[0]),
-    phase: rng() * Math.PI * 2, hue: rng() * 360, age: 0,
+    phase: rng() * Math.PI * 2, hue: rng() * 360, age: fresh ? 0 : BUBBLE.appearS,
     surprise: rng() < BUBBLE.surpriseChance ? SURPRISES[Math.floor(rng() * SURPRISES.length)] : null,
   };
 }
 
-/** Floats bubbles upward with a gentle sway; ones that leave the top come back at the bottom. */
+/** Floats bubbles upward with a gentle sway; ones that leave the top are blown in again mid-wall. */
 export function stepBubbles(bubbles, dt, stage, rng = Math.random) {
   return bubbles.map((b) => {
     const age = b.age + dt;
@@ -37,13 +40,14 @@ export function stepBubbles(bubbles, dt, stage, rng = Math.random) {
   });
 }
 
-/** Adds fresh bubbles (rising from below) until there are `count`. */
+/** Adds freshly blown bubbles until there are `count`. */
 export function fillBubbles(bubbles, count, stage, rng = Math.random) {
   const missing = Math.max(0, count - bubbles.length);
   return [...bubbles, ...Array.from({ length: missing }, () => spawnBubble(stage, rng, true))];
 }
 
 function touched(b, { grid, hands }) {
+  if (b.age < BUBBLE.appearS) return false;
   if (hands.some((h) => Math.hypot(h.x - b.x, h.y - b.y) < b.r * HAND_REACH)) return true;
   if (!grid) return false;
   if (gridAt(grid, b)) return true;

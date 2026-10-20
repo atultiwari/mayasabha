@@ -1,6 +1,7 @@
 // Draws iridescent soap bubbles (with a surprise floating inside some), popped surprises, and
 // glowing, flapping butterflies on a black stage.
 import { drawFx } from '../../kit/fx.js';
+import { BUBBLE } from './bubbles.js';
 
 const PALETTES = [
   ['#ff9a2e', '#ffd23e'], ['#3ec8ff', '#8a7dff'], ['#ff5fa2', '#ffd1e8'], ['#7be08a', '#e8ff6a'], ['#c084fc', '#ff9ad5'],
@@ -15,6 +16,14 @@ function drawImageFit(ctx, img, cx, cy, height, alpha = 1) {
 }
 
 function drawBubble(ctx, b, chars) {
+  const grow = Math.min(1, b.age / BUBBLE.appearS); // blown in: fades and swells into view
+  if (grow < 1) {
+    ctx.save();
+    ctx.globalAlpha = grow;
+    drawBubble(ctx, { ...b, r: b.r * (0.4 + 0.6 * grow), age: BUBBLE.appearS }, chars);
+    ctx.restore();
+    return;
+  }
   const hue = b.hue + b.age * 35;
   if (b.surprise && chars[b.surprise]) {
     drawImageFit(ctx, chars[b.surprise].img, b.x, b.y + Math.sin(b.age * 2) * 6, b.r * 1.25, 0.9);

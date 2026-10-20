@@ -8,10 +8,11 @@ const STAGE = { w: 1920, h: 1080 };
 const rng = () => 0.5;
 const emptyGrid = { cols: 48, rows: 27, cellW: 40, cellH: 40, cells: new Uint8Array(48 * 27) };
 
-test('bubbles rise and are replaced at the bottom when they float off the top', () => {
+test('bubbles rise, and new ones are blown in mid-wall within reach (not under their feet)', () => {
   let bubbles = [{ ...spawnBubble(STAGE, rng, true), y: -500 }];
   bubbles = stepBubbles(bubbles, 0.016, STAGE, rng);
-  assert.ok(bubbles[0].y > STAGE.h, 'new bubble starts below the stage');
+  const [lo, hi] = BUBBLE.appearBand.map((f) => f * STAGE.h);
+  assert.ok(bubbles[0].y >= lo && bubbles[0].y <= hi, `new bubble at ${bubbles[0].y}`);
   const before = bubbles[0].y;
   bubbles = stepBubbles(bubbles, 1, STAGE, rng);
   assert.ok(bubbles[0].y < before);
@@ -80,4 +81,13 @@ test('bubbles stay in the middle of the wall, away from the corners and sofa arm
   }
   const middle = bubbles.filter((b) => Math.abs(b.x - STAGE.w / 2) < (hi - lo) / 4).length;
   assert.ok(middle > bubbles.length / 2, 'most bubbles near the centre');
+});
+
+test('a bubble that is still appearing cannot pop yet, so a child standing there sees it first', () => {
+  const b = { ...spawnBubble(STAGE, rng, true), x: 500, y: 500, r: 100 };
+  const hand = { grid: null, hands: [{ x: 500, y: 500 }] };
+  assert.equal(popTouched([b], hand).popped.length, 0);
+  const grown = stepBubbles([b], BUBBLE.appearS + 0.1, STAGE, rng)[0];
+  assert.equal(popTouched([{ ...grown, x: 500, y: 500 }], hand).popped.length, 1);
+  assert.ok(spawnBubble(STAGE, rng, false).age >= BUBBLE.appearS, 'bubbles there at the start are ready');
 });
