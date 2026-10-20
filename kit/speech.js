@@ -1,5 +1,24 @@
 // Speaks short phrases in a friendly, higher voice ("Peek-a-boo!", a character's name), using the
 // browser's built-in offline speech. Rate-limited so rapid events don't stack up a queue of words.
+// Off by default in every activity: the family switches it on from the homepage (saved per browser).
+import { loadJson, saveJson } from './storage.js';
+
+export const VOICE_KEY = 'voice';
+
+/** Spoken words are on only when explicitly switched on. */
+export const voiceOn = (stored) => stored === true;
+
+let enabled = null; // read lazily, so this module also loads outside a browser (tests)
+const isEnabled = () => (enabled ??= voiceOn(loadJson(VOICE_KEY)));
+
+/** Homepage switch: turns spoken words on or off for all activities in this browser. */
+export function setVoiceOn(value) {
+  enabled = value === true;
+  saveJson(VOICE_KEY, enabled);
+  if (!enabled) window.speechSynthesis?.cancel();
+}
+
+export const isVoiceOn = () => isEnabled();
 
 const MIN_GAP_MS = 1200;
 let lastSpoken = 0;
@@ -18,7 +37,7 @@ function voiceFor(lang) {
  */
 export function say(text, { force = false, queue = false, lang = null } = {}) {
   const now = performance.now();
-  if (muted || (!force && !queue && now - lastSpoken < MIN_GAP_MS)) return;
+  if (muted || !isEnabled() || (!force && !queue && now - lastSpoken < MIN_GAP_MS)) return;
   try {
     if (!window.speechSynthesis) return;
     const u = new SpeechSynthesisUtterance(text);

@@ -120,7 +120,7 @@ orbiting at their true relative speeds (sped up). Fly to any body and hear its n
 | L | 🔤 | English / हिन्दी |
 | [ ] P | 🐢 🐇 | Slower / faster / pause time |
 
-Hindi narration uses your computer's Hindi voice (on macOS: System Settings → Accessibility → Spoken
+Spoken words (character names, story narration) are off by default; tick "Spoken words" on the homepage to turn them on. Hindi narration uses your computer's Hindi voice (on macOS: System Settings → Accessibility → Spoken
 Content → add a Hindi voice such as Lekha).
 
 ### Rocket Ride to Chanda Mama 🚀🌝 (bedtime story)

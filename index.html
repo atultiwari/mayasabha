@@ -30,6 +30,8 @@
     .remote .url { font: 700 clamp(18px, 2.6vw, 26px)/1.3 ui-monospace, Menlo, monospace; color: #5b2bd6; word-break: break-all; }
     .remote .more { font-size: 14px; color: #5f5880; }
     .remote[hidden], .online-note[hidden] { display: none; }
+    .voice { display: inline-flex; gap: 8px; align-items: center; margin: 4px 0 18px; font-size: 15px; cursor: pointer; }
+    .voice input { width: 18px; height: 18px; }
     .phonecam { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
     .phonecam input, .phonecam select, .phonecam button { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #c9c2e8; }
     .phonecam input { width: 230px; }
@@ -54,6 +56,7 @@
   <main>
     <h1>MayaSabha <span class="deva" lang="sa">मायासभा</span></h1>
     <p class="lede">Turn your living room into a hall of illusions. Open an activity, press <code>F</code> for fullscreen, <code>E</code> to fit it to the wall.</p>
+    <label class="voice"><input type="checkbox" id="voice"> 🗣️ Spoken words in activities (names, story narration). Off by default; sound effects stay on.</label>
     <section class="remote" id="remote" aria-label="Phone remote" hidden>
       <img id="remote-qr" src="/api/remote-qr.svg" alt="QR code for the phone remote">
       <div>
@@ -142,6 +145,10 @@
   <script type="module">
     // Show the phone-remote address so nobody has to look up the computer's IP.
     import { serverInfo } from './kit/server-info.js';
+    import { isVoiceOn, setVoiceOn } from './kit/speech.js';
+    const voice = document.getElementById('voice');
+    voice.checked = isVoiceOn();
+    voice.addEventListener('change', () => setVoiceOn(voice.checked));
     async function showRemote() {
       try {
         const info = await serverInfo();
