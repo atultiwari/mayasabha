@@ -16,7 +16,7 @@ import { activeGrid } from '../../kit/vision/body-map.js';
 import { ROOM_KEY, loadRoom } from '../../kit/room/room-map.js';
 import { bbox } from '../../kit/room/shapes.js';
 import { trackHands } from '../../kit/vision/hand-tracker.js';
-import { BUBBLE, fillBubbles, popTouched, spawnBubble, stepBubbles } from './bubbles.js';
+import { BUBBLE, driftAway, fillBubbles, popTouched, spawnBubble, stepBubbles } from './bubbles.js';
 import { BUTTERFLY, populateButterflies, stepButterflies } from './butterflies.js';
 import { drawWall } from './render.js';
 import { HELP_KEYS, KEYS, wallLayout } from './controls.js';
@@ -158,7 +158,7 @@ function update(dt, timeMs) {
     if (popped.length) onPop(popped);
     bubbles = fillBubbles(stepBubbles(kept, dt, stage.size, Math.random, pictureBoxes), bubbleCount, stage.size, Math.random, pictureBoxes);
   } else {
-    bubbles = stepBubbles(bubbles, dt, stage.size, Math.random, pictureBoxes).filter((b) => b.y > -b.r); // let the last ones drift away
+    bubbles = driftAway(bubbles, dt, stage.size, pictureBoxes); // let the last ones float away
   }
   if (showButterflies()) {
     const before = flock.filter((b) => b.state === 'landed').length;

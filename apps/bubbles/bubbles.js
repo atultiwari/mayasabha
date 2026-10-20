@@ -86,6 +86,14 @@ export function stepBubbles(bubbles, dt, stage, rng = Math.random, avoid = []) {
   });
 }
 
+/** Bubbles mode switched off: they keep floating up and vanish off the top, never replaced. */
+export function driftAway(bubbles, dt, stage, avoid = []) {
+  const leaving = bubbles
+    .filter((b) => b.slide || b.y - b.vy * dt >= -b.r)
+    .map((b) => ({ ...b, vy: Math.max(b.vy, 300) })); // hurry off so the mode change is quick
+  return stepBubbles(leaving, dt, stage, Math.random, avoid);
+}
+
 /** Adds freshly blown bubbles until there are `count`. */
 export function fillBubbles(bubbles, count, stage, rng = Math.random, avoid = []) {
   const missing = Math.max(0, count - bubbles.length);

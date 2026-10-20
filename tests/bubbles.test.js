@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BUBBLE, fillBubbles, popTouched, spawnBubble, stepBubbles } from '../apps/bubbles/bubbles.js';
+import { BUBBLE, driftAway, fillBubbles, popTouched, spawnBubble, stepBubbles } from '../apps/bubbles/bubbles.js';
 import { BUTTERFLY, populateButterflies, stepButterflies } from '../apps/bubbles/butterflies.js';
 import { HANDS } from '../kit/vision/hand-tracker.js';
 
@@ -145,4 +145,10 @@ test('no bubble gets stuck under the picture, and dancers spread out instead of 
   assert.ok(new Set(ends.map((x) => Math.round(x / 25))).size >= 3, `dancers all end at ${[...new Set(ends)]}`);
   const left = ends.filter((x) => x < puja.x).length;
   assert.ok(left >= ends.length * 0.3 && left <= ends.length * 0.7, `dancers leave on both sides: ${left} of ${ends.length} went left`);
+});
+
+test('switching to butterflies only: the bubbles hurry off the top within seconds and are gone for good', () => {
+  let bubbles = Array.from({ length: 7 }, () => spawnBubble(STAGE, rng, false));
+  for (let i = 0; i < 30 * 6 && bubbles.length; i += 1) bubbles = driftAway(bubbles, 1 / 30, STAGE);
+  assert.equal(bubbles.length, 0);
 });
