@@ -15,6 +15,7 @@ import { createVision } from '../../kit/vision/vision.js';
 import { COLOR_PRESETS, blobOutlines } from '../../kit/vision/color-blobs.js';
 import { GAME, cushionAt, defaultCushions, goalRect, moveCushion, noteFor, spawnX, syncTracked, tickSpawner, virtualPoints } from './game.js';
 import { createPhysics } from './physics.js';
+import { ROOM_KEY, loadRoom, solidsFromRoom } from '../../kit/room/room-map.js';
 import { drawField } from './render.js';
 import { COLOR_ORDER, HELP_KEYS, KEYS, cushionLayout } from './controls.js';
 
@@ -24,7 +25,10 @@ const SAMPLE = { w: 160, h: 120 };
 const FRUIT = ['banana', 'apple', 'orange'];
 const HAPPY_S = 1.4;
 
-const stage = createStage({ key: KEY });
+// Floor play keeps its own picture fit; wall mode shares the Room Map's fit and its traced objects.
+const prefs = loadJson(`${KEY}:prefs`) ?? {};
+const surface = prefs.surface === 'wall' ? 'wall' : 'floor';
+const stage = createStage({ key: surface === 'wall' ? ROOM_KEY : KEY });
 const hud = createHud({ title: 'Cushion Physics 🛋️', keys: HELP_KEYS, footer: 'Drag the red pillows, or press C to use real cushions.' });
 const sound = createSound();
 const editor = createEditor({ stage, ledges: false });
@@ -36,7 +40,6 @@ const physics = createPhysics(window.Matter, {
 });
 
 // ---- state ----------------------------------------------------------------------------------------
-const prefs = loadJson(`${KEY}:prefs`) ?? {};
 let mode = prefs.mode === 'marbles' ? 'marbles' : 'feed';
 let colour = COLOR_PRESETS[prefs.colour] ? prefs.colour : 'red';
 let goalSpot = 1;
@@ -55,12 +58,18 @@ sampler.width = SAMPLE.w;
 sampler.height = SAMPLE.h;
 const sctx = sampler.getContext('2d', { willReadFrequently: true });
 
-const persist = () => saveJson(`${KEY}:prefs`, { mode, colour });
+const persist = () => saveJson(`${KEY}:prefs`, { mode, colour, surface });
+// Wall mode: frames, shelves and other traced objects are solid too (pictures never are).
+const roomSolids = surface === 'wall' ? solidsFromRoom(loadRoom()).map((s) => ({ ...s, version: 1, hue: 45, room: true })) : [];
 const usingCamera = () => vision.on;
 const hueOf = (id) => [...id].reduce((a, ch) => a + ch.charCodeAt(0) * 37, 0) % 360;
 
 /** Current cushions as polygons in stage px, from the camera or the virtual pillows. */
 function cushionShapes() {
+  return [...movableShapes(), ...roomSolids];
+}
+
+function movableShapes() {
   if (usingCamera()) {
     return tracked.map((t) => ({ id: t.id, version: t.version, points: t.outline.points.map((p) => vision.mapping.toStage(p)), hue: hueOf(t.id) }));
   }
@@ -123,6 +132,10 @@ const ACTIONS = {
   clear: () => { physics.clear(); score = 0; },
   camera: () => vision.toggle({ videoUrl: testVideo }), calibrate: () => vision.calibrate(), mirror: () => vision.toggleMirror(),
   inspect: () => vision.toggleDebug(), colour: nextColour,
+  surface: () => {
+    saveJson(`${KEY}:prefs`, { mode, colour, surface: surface === 'wall' ? 'floor' : 'wall' });
+    window.location.reload(); // the picture fit differs between floor and wall
+  },
   edit: () => editor.toggle(), fullscreen: () => stage.toggleFullscreen(), help: () => hud.toggleHelp(),
   mute: () => {
     const muted = sound.toggleMute();

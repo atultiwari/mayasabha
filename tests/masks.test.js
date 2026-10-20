@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TAGS, bbox, centroid, contains, makeEllipse, makePolygon, makeRect, moveHandle, nextTag, outlinePoints, sanitizeShapes, shapeHandles, topEdgePoints,
-} from '../apps/maya-masks/shapes.js';
+} from '../kit/room/shapes.js';
 import { SCENES, effectsFor } from '../apps/maya-masks/scenes.js';
 import { RANGOLI, rangoliPetals } from '../apps/maya-masks/rangoli.js';
 import { spawnBurst, stepBursts } from '../apps/maya-masks/fireworks.js';
@@ -99,8 +99,17 @@ test('a firework burst expands, falls and fades out', () => {
 
 test('every effect a scene asks for exists in the effects library', async () => {
   const { EFFECTS } = await import('../apps/maya-masks/effects.js');
-  const { TAGS: tags } = await import('../apps/maya-masks/shapes.js');
+  const { TAGS: tags } = await import('../kit/room/shapes.js');
   for (const scene of Object.keys(SCENES)) {
     for (const tag of tags) for (const name of effectsFor(scene, tag)) assert.ok(EFFECTS[name], `${scene}/${tag}: ${name}`);
+  }
+});
+
+test('a "picture" is never painted over: every scene only decorates around it', async () => {
+  const { EFFECTS } = await import('../apps/maya-masks/effects.js');
+  for (const scene of Object.keys(SCENES)) {
+    const names = effectsFor(scene, 'picture');
+    assert.ok(names.length > 0, scene);
+    for (const name of names) assert.equal(EFFECTS[name].clip, false, `${scene}: ${name} paints inside the picture`);
   }
 });

@@ -1,7 +1,7 @@
 // The effects library. Each effect paints one traced shape. `clip: true` effects are clipped to the
 // shape's outline (the object itself changes); the others sit on or around its edges (borders,
 // diyas on top, garlands). env: { t, sceneT, art, chars, level (music 0..1), pointer, lang, bursts }.
-import { bbox, centroid, outlinePoints, topEdgePoints, tracePath } from './shapes.js';
+import { bbox, centroid, outlinePoints, topEdgePoints, tracePath } from '../../kit/room/shapes.js';
 import { rangoliPetals } from './rangoli.js';
 import { FIREWORK, sparkAt } from './fireworks.js';
 
@@ -325,6 +325,23 @@ function confetti(ctx, s, env) {
   }
 }
 
+/** Marigold garland hung around the outside of a shape (for pictures: decorates without covering). */
+function garland(ctx, s, env) {
+  const b = bbox(s);
+  const n = Math.max(20, Math.round((b.w + b.h) / 22));
+  outlinePoints(s, n).forEach((p, i) => {
+    const c = centroid(s);
+    const out = 16;
+    const len = Math.hypot(p.x - c.x, p.y - c.y) || 1;
+    const x = p.x + ((p.x - c.x) / len) * out;
+    const y = p.y + ((p.y - c.y) / len) * out + Math.sin(env.t * 2 + i) * 1.5;
+    ctx.fillStyle = i % 3 === 2 ? '#ffd23e' : '#ff8a00';
+    ctx.beginPath();
+    ctx.arc(x, y, 11, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
 // ---- Align ----------------------------------------------------------------------------------------
 
 function align(ctx, s) {
@@ -338,7 +355,20 @@ function align(ctx, s) {
   ctx.fillText(s.tag, c.x, c.y + 10);
 }
 
+/** Outline only, for lining up pictures without shining over them. */
+function alignOutline(ctx, s) {
+  strokeShape(ctx, s, '#ffffff', 6, 0);
+  const c = centroid(s);
+  const b = bbox(s);
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 26px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(s.tag, c.x, b.y - 14);
+}
+
 export const EFFECTS = Object.freeze({
+  garland: { clip: false, draw: garland },
+  'align-outline': { clip: false, draw: alignOutline },
   'gold-border': { clip: false, draw: goldBorder },
   'diya-top': { clip: false, draw: diyaTop },
   'diya-center': { clip: false, draw: diyaCenter },

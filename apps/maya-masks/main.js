@@ -10,11 +10,12 @@ import { connectRemote } from '../../kit/remote-link.js';
 import { serverInfo } from '../../kit/server-info.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
 import { loadCharacters, resolveCharacters } from '../../kit/characters.js';
-import { sanitizeShapes, bbox } from './shapes.js';
+import { bbox } from '../../kit/room/shapes.js';
+import { ROOM_KEY, loadRoom, saveRoom } from '../../kit/room/room-map.js';
 import { SCENES, effectsFor } from './scenes.js';
 import { spawnBurst, stepBursts } from './fireworks.js';
 import { paintEffect } from './effects.js';
-import { createTracer } from './tracer.js';
+import { createTracer } from '../../kit/room/tracer.js';
 import { HELP_KEYS, KEYS, SAMPLE_SHAPES, masksLayout } from './controls.js';
 
 const KEY = 'maya-masks';
@@ -22,14 +23,14 @@ const ART = ['diya', 'lantern', 'fish', 'tropical-fish', 'blowfish'];
 const AUTO_BURST_S = [1.2, 2.6];
 const SHOW_BURSTS = 3;
 
-const stage = createStage({ key: KEY });
+const stage = createStage({ key: ROOM_KEY }); // shared wall fit with Room Map and Room Pet
 const hud = createHud({ title: 'Maya Masks 🪔', keys: HELP_KEYS, footer: 'Press T to trace the objects in your room.' });
 const sound = createSound();
 const editor = createEditor({ stage, ledges: false });
 
 // ---- state (replaced, never mutated) ----------------------------------------------------------
 const prefs = loadJson(`${KEY}:prefs`) ?? {};
-let shapes = sanitizeShapes(loadJson(`${KEY}:shapes`));
+let shapes = loadRoom(); // the shared Room Map
 let lang = prefs.lang === 'hi' ? 'hi' : 'en';
 let scene = SCENES[prefs.scene] ? prefs.scene : 'diwali';
 let sceneT = 0;
@@ -51,7 +52,7 @@ const tracer = createTracer({
   getShapes: () => shapes,
   setShapes: (next) => {
     shapes = next;
-    saveJson(`${KEY}:shapes`, shapes);
+    saveRoom(shapes);
   },
   onToast: (msg) => hud.toast(msg),
 });

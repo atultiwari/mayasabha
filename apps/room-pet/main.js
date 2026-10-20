@@ -10,6 +10,7 @@ import { connectRemote } from '../../kit/remote-link.js';
 import { serverInfo } from '../../kit/server-info.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
 import { GROUND_ID, clampToLedge, makeGround, makeLedge, removeNearest, sanitizeLedges } from '../../kit/ledges.js';
+import { ROOM_KEY, ledgesFromRoom, loadRoom } from '../../kit/room/room-map.js';
 import { createPet, petEvent, updatePet } from './brain.js';
 import { biteFruit, removeFruit, spawnFruit, stepFruits } from './fruit.js';
 import { FRIEND_KINDS, spawnFriend, stepFriends } from './friends.js';
@@ -23,7 +24,7 @@ const KEY = 'room-pet';
 const PET_SIZE = { min: 150, max: 700, step: 30, initial: 330 };
 const MAX_FRUIT = 10; // phone-button spam can't pile up fruit forever
 
-const stage = createStage({ key: KEY });
+const stage = createStage({ key: ROOM_KEY }); // shared wall fit, so the Room Map lines up
 const hud = createHud({ title: 'Room Pet 🐶', keys: HELP_KEYS, footer: 'Phone remote: open /remote/ on the same Wi-Fi' });
 const sound = createSound();
 
@@ -39,7 +40,12 @@ let showLedges = false;
 let mic = null;
 let micStarting = false;
 
-const ledges = () => [makeGround(stage.size.w, groundY), ...userLedges];
+// Ledges: the floor line, ones drawn here (E), and the tops of objects traced in the Room Map.
+let roomLedges = ledgesFromRoom(loadRoom());
+window.addEventListener('storage', (e) => {
+  if (e.key?.endsWith('room:shapes')) roomLedges = ledgesFromRoom(loadRoom()); // traced in another tab
+});
+const ledges = () => [makeGround(stage.size.w, groundY), ...userLedges, ...roomLedges];
 const world = () => ({ ledges: ledges(), fruits, friends, width: stage.size.w });
 const persist = () => saveJson('room-pet:world', { groundY, ledges: userLedges, petSize });
 

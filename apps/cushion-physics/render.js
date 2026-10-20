@@ -10,6 +10,17 @@ function polygon(ctx, pts) {
 
 function drawCushion(ctx, c, flash, t, isVirtual) {
   polygon(ctx, c.points);
+  if (c.room) {
+    // A real object from the Room Map: just a soft gold outline that flashes when hit.
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,207,90,${0.35 + flash * 0.65})`;
+    ctx.shadowColor = '#ffcf5a';
+    ctx.shadowBlur = 10 + flash * 30;
+    ctx.lineWidth = 4 + flash * 6;
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
   if (isVirtual) {
     const g = ctx.createLinearGradient(c.points[0].x, c.points[0].y, c.points[2].x, c.points[2].y);
     g.addColorStop(0, '#e2264f');

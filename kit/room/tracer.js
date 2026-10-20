@@ -4,7 +4,9 @@
 import { contains, makeEllipse, makePolygon, makeRect, moveHandle, nextTag, outlinePoints, shapeHandles, centroid, translate } from './shapes.js';
 
 const HANDLE_PX = 16;
-const COLORS = { frame: '#ffd23e', door: '#ff7ad9', balloon: '#3ec8ff', clock: '#7be08a', floor: '#ff9a3c', other: '#c0b8ff' };
+const COLORS = {
+  frame: '#ffd23e', picture: '#ffffff', door: '#ff7ad9', shelf: '#a0e0ff', balloon: '#3ec8ff', clock: '#7be08a', floor: '#ff9a3c', other: '#c0b8ff',
+};
 const TOOLS = { 1: 'rect', 2: 'ellipse', 3: 'polygon' };
 
 /**
@@ -185,7 +187,7 @@ export function createTracer({ stage, getShapes, setShapes, onToast }) {
       '1 rectangle  2 ellipse  3 polygon (click points, Enter to close)',
       'Drag over a real object to outline it; drag white squares to adjust',
       'Click a shape to select · drag to move · Tab change tag · Delete remove',
-      'Tags: frame · door · balloon · clock · floor · other',
+      'Tags: frame · picture (never painted over) · door · shelf · balloon · clock · floor · other',
     ];
     octx.font = '600 15px system-ui';
     octx.textAlign = 'left';

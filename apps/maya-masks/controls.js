@@ -1,5 +1,5 @@
 // Keys, help text, phone buttons and the sample layout for Maya Masks.
-import { makeEllipse, makePolygon, makeRect } from './shapes.js';
+import { makeEllipse, makePolygon, makeRect } from '../../kit/room/shapes.js';
 import { SCENES, SCENE_ORDER } from './scenes.js';
 
 export const KEYS = Object.freeze({

@@ -23,6 +23,19 @@ fully offline on your home Wi-Fi.
 - **Your own characters:** swap in pictures of your child's favourites, kept private and out of git.
 - Plain JavaScript ES modules, no build step, one small Node server, 60+ unit tests.
 
+## Room Map: set up your wall once
+
+Open **Room Map**, fit the picture to the wall (E) and trace the real objects (T): picture frames, a shelf,
+the door, a clock. Every wall activity then uses the same map:
+
+- **Maya Masks** lights the objects up.
+- **Room Pet** walks along the tops of frames, shelves and the door.
+- **Cushion Physics** (wall mode, W) makes them solid, so fruit lands on the frame and slides off.
+
+Tag a framed **puja picture** (or any picture you'd rather not cover) as `picture`: activities only decorate
+around it (gold glow, diyas on top, a marigold garland) and never project over it or bounce things off it.
+This is enforced by a unit test across every scene.
+
 ## Activities
 
 ### Room Pet 🐶
@@ -239,6 +252,7 @@ apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
 apps/bubbles/     bubbles that pop on touch, butterflies that land on still hands
 apps/solar-system/  three.js solar system: orbit maths, scene, camera views, bilingual narration
 apps/rocket-ride/   bedtime story: pure story engine, bilingual script, cartoon planets with faces
+apps/room-map/      set up the wall once: shared corner fit + traced objects (kit/room/)
 apps/maya-masks/    projection mapping: traced shapes, scenes, effects library, rangoli, fireworks
 apps/cushion-physics/  Matter.js world built from real objects found by colour
 remote/           the phone remote page

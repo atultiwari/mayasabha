@@ -6,7 +6,9 @@
 /** @typedef {{ id: string, kind: 'rect'|'ellipse', tag: string, x: number, y: number, w: number, h: number }} BoxShape */
 /** @typedef {{ id: string, kind: 'polygon', tag: string, points: Point[] }} PolygonShape */
 
-export const TAGS = Object.freeze(['frame', 'door', 'balloon', 'clock', 'floor', 'other']);
+// picture: a framed picture whose image must stay untouched (e.g. a puja picture): activities only
+// decorate around it and never paint inside it or bounce things off it.
+export const TAGS = Object.freeze(['frame', 'picture', 'door', 'shelf', 'balloon', 'clock', 'floor', 'other']);
 const MIN_SIZE = 20;
 
 export const nextTag = (tag) => TAGS[(TAGS.indexOf(tag) + 1) % TAGS.length];
