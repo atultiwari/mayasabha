@@ -79,3 +79,40 @@ test('a body that stays still (a parent lying on the sofa) stops counting after 
   assert.deepEqual([...state.grid.cells], [0, 1, 1]); // leaving and coming back counts again
   assert.equal(activeGrid(null, null, 0.5).grid, null);
 });
+
+test('someone lying on the sofa is left out; standing or sitting children are not', async () => {
+  const { isLyingDown } = await import('../kit/vision/body-map.js');
+  const person = (shoulders, hips) => {
+    const lm = Array.from({ length: 33 }, () => ({ x: 0, y: 0, visibility: 0 }));
+    lm[11] = { ...shoulders[0], visibility: 0.9 }; lm[12] = { ...shoulders[1], visibility: 0.9 };
+    lm[23] = { ...hips[0], visibility: 0.9 }; lm[24] = { ...hips[1], visibility: 0.9 };
+    return lm;
+  };
+  const standing = person([{ x: 0.45, y: 0.4 }, { x: 0.5, y: 0.4 }], [{ x: 0.46, y: 0.55 }, { x: 0.49, y: 0.55 }]);
+  const leaning = person([{ x: 0.5, y: 0.4 }, { x: 0.55, y: 0.4 }], [{ x: 0.42, y: 0.52 }, { x: 0.47, y: 0.52 }]);
+  const lying = person([{ x: 0.7, y: 0.6 }, { x: 0.7, y: 0.64 }], [{ x: 0.5, y: 0.66 }, { x: 0.5, y: 0.7 }]);
+  assert.equal(isLyingDown(standing), false);
+  assert.equal(isLyingDown(leaning), false);
+  assert.equal(isLyingDown(lying), true);
+  const unsure = lying.map((p, i) => (i === 23 || i === 24 ? { ...p, visibility: 0.1 } : p));
+  assert.equal(isLyingDown(unsure), false); // can't tell: keep them in the game
+});
+
+test('tracking looks only at the projected area (plus a margin), so a small child far away is big enough to find', async () => {
+  const { focusArea, fromFocus } = await import('../kit/vision/body-map.js');
+  const mapping = calibratedMapping(STAGE, [{ x: 0.34, y: 0.34 }, { x: 0.8, y: 0.34 }, { x: 0.8, y: 0.6 }, { x: 0.34, y: 0.6 }]);
+  const area = focusArea(mapping, STAGE);
+  assert.ok(area.x > 0.15 && area.x < 0.3 && area.x + area.w < 1 && area.w < 0.8, JSON.stringify(area));
+  assert.ok(area.y > 0 && area.y + area.h <= 1, JSON.stringify(area));
+  const full = focusArea(defaultMapping(STAGE, false), STAGE);
+  assert.deepEqual(full, { x: 0, y: 0, w: 1, h: 1 });
+  // Points found inside the zoomed area map back to the whole camera frame.
+  const p = fromFocus({ x: 0.5, y: 0.5, visibility: 0.9 }, { x: 0.2, y: 0.1, w: 0.6, h: 0.5 });
+  close(p.x, 0.5); close(p.y, 0.35); assert.equal(p.visibility, 0.9);
+});
+
+test('occupancy grid reads a mask that covers only the zoomed area', () => {
+  const mask = { width: 2, height: 2, data: [1, 0, 0, 0], area: { x: 0, y: 0, w: 0.5, h: 0.5 } };
+  const g = occupancyGrid(mask, defaultMapping({ w: 4, h: 4 }, false), { w: 4, h: 4 }, 4, 4);
+  assert.deepEqual([...g.cells], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+});

@@ -33,6 +33,62 @@ export function calibratedMapping(stage, cameraPoints) {
   };
 }
 
+// Margins around the projected area (fractions of its size): a little to the sides and above, more
+// below so the bodies of people standing in front of the wall are in view too.
+const FOCUS_MARGIN = { side: 0.05, top: 0.1, bottom: 0.4 };
+const FULL = Object.freeze({ x: 0, y: 0, w: 1, h: 1 });
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
+/**
+ * The part of the camera frame worth tracking: the projected stage plus a margin. Zooming in on it
+ * makes a small child far from the camera big enough for the pose model. Whole frame when uncalibrated.
+ * @returns {{ x: number, y: number, w: number, h: number }} normalised camera rectangle
+ */
+export function focusArea(mapping, stage) {
+  if (mapping.kind !== 'calibrated') return { ...FULL };
+  const corners = [{ x: 0, y: 0 }, { x: stage.w, y: 0 }, { x: stage.w, y: stage.h }, { x: 0, y: stage.h }].map(mapping.toCamera);
+  const xs = corners.map((p) => p.x);
+  const ys = corners.map((p) => p.y);
+  const w = Math.max(...xs) - Math.min(...xs);
+  const h = Math.max(...ys) - Math.min(...ys);
+  const x0 = clamp01(Math.min(...xs) - w * FOCUS_MARGIN.side);
+  const x1 = clamp01(Math.max(...xs) + w * FOCUS_MARGIN.side);
+  const y0 = clamp01(Math.min(...ys) - h * FOCUS_MARGIN.top);
+  const y1 = clamp01(Math.max(...ys) + h * FOCUS_MARGIN.bottom);
+  return x1 - x0 < 0.05 || y1 - y0 < 0.05 ? { ...FULL } : { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/** A point found inside the focus area, back in whole-frame camera coordinates. */
+export function fromFocus(p, area = FULL) {
+  return { ...p, x: area.x + p.x * area.w, y: area.y + p.y * area.h };
+}
+
+function toFocus(p, area = FULL) {
+  return { x: (p.x - area.x) / area.w, y: (p.y - area.y) / area.h };
+}
+
+const SHOULDERS = [11, 12];
+const HIPS = [23, 24];
+
+function midpoint(lm, [a, b]) {
+  const p = lm[a];
+  const q = lm[b];
+  if (!p || !q || p.visibility < VISIBLE || q.visibility < VISIBLE) return null;
+  return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
+}
+
+/**
+ * True when a person's torso (shoulders to hips) is closer to flat than upright: a grown-up lying
+ * on the sofa, who shouldn't pop the child's bubbles. Unsure (hidden hips) counts as upright.
+ * @param {number} aspect camera frame width / height (landmarks are normalised per axis)
+ */
+export function isLyingDown(lm, aspect = 1) {
+  const s = midpoint(lm ?? [], SHOULDERS);
+  const h = midpoint(lm ?? [], HIPS);
+  if (!s || !h) return false;
+  return Math.abs((s.x - h.x) * aspect) > Math.abs(s.y - h.y);
+}
+
 /**
  * Samples the person mask at the centre of each stage cell.
  * @param {{ width: number, height: number, data: Float32Array | number[] }} mask
@@ -44,7 +100,7 @@ export function occupancyGrid(mask, mapping, stage, cols, rows) {
   const cells = new Uint8Array(cols * rows);
   for (let r = 0; r < rows; r += 1) {
     for (let c = 0; c < cols; c += 1) {
-      const cam = mapping.toCamera({ x: (c + 0.5) * cellW, y: (r + 0.5) * cellH });
+      const cam = toFocus(mapping.toCamera({ x: (c + 0.5) * cellW, y: (r + 0.5) * cellH }), mask.area);
       const mx = Math.floor(cam.x * mask.width);
       const my = Math.floor(cam.y * mask.height);
       if (mx >= 0 && my >= 0 && mx < mask.width && my < mask.height && mask.data[my * mask.width + mx] > MASK_ON) {

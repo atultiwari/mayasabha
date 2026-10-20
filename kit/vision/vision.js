@@ -5,7 +5,7 @@ import { loadJson, saveJson } from '../storage.js';
 import { openPhoneSource, openSource } from './camera.js';
 import { serverInfo } from '../server-info.js';
 import { createPoseDetector } from './pose.js';
-import { calibratedMapping, defaultMapping, handsFromPose, occupancyGrid } from './body-map.js';
+import { calibratedMapping, defaultMapping, focusArea, handsFromPose, occupancyGrid } from './body-map.js';
 import { CALIBRATION_TARGETS, addCalibrationClick, sanitizeCalibration, startCalibration } from './calibration.js';
 
 const GRID = { cols: 48, rows: 27 };
@@ -139,7 +139,7 @@ export function createVision({ stage, key, hud, pose = true }) {
       });
       ui.label.textContent = `Click target ${calibration.points.length + 1} (${ORDER[calibration.points.length]}) where you see it in this camera view · Esc cancels`;
     } else {
-      ui.label.textContent = `${source.label} · ${mapping.kind === 'calibrated' ? 'calibrated' : 'not calibrated (K)'} · I hides`;
+      ui.label.textContent = `${source.label} · ${mapping.kind === 'calibrated' ? 'calibrated' : 'not calibrated (K)'} · ${latest.people ?? 'nobody yet'} · I hides`;
     }
   }
 
@@ -151,16 +151,22 @@ export function createVision({ stage, key, hud, pose = true }) {
     }
     const tmp = new OffscreenCanvas(mask.width, mask.height);
     tmp.getContext('2d').putImageData(img, 0, 0);
-    ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+    const area = mask.area ?? { x: 0, y: 0, w: 1, h: 1 };
+    const [x, y, w, h] = [area.x * canvas.width, area.y * canvas.height, area.w * canvas.width, area.h * canvas.height];
+    ctx.drawImage(tmp, x, y, w, h);
+    ctx.strokeStyle = 'rgba(255,210,62,.8)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h); // the zoomed-in area that tracking looks at
   }
 
   /** Runs detection on the newest frame. @returns {{ grid: object|null, hands: {x:number,y:number}[] }} */
   function update(timeMs) {
     if (source && detector) {
       try {
-        const res = detector.detect(source.video, timeMs);
+        const res = detector.detect(source.video, timeMs, focusArea(mapping, stage.size));
         if (res) {
           latest = {
+            people: `${res.seen ?? res.poses.length} people${res.lying ? `, ${res.lying} lying down (ignored)` : ''}`,
             poses: res.poses,
             mask: res.mask,
             grid: res.mask ? occupancyGrid(res.mask, mapping, stage.size, GRID.cols, GRID.rows) : null,
