@@ -1,0 +1,8 @@
+node_modules/
+__pycache__/
+.DS_Store
+
+# Your own character pictures stay private
+assets/custom/*
+!assets/custom/README.md
+!assets/custom/characters.example.json

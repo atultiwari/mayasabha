@@ -1,0 +1,6 @@
+{
+  "pet":      { "file": "cat.png",   "happyFile": "cat-happy.png", "faces": "right", "label": "Kitty", "icon": "🐱", "scale": 1.2 },
+  "mouse":    { "file": "mouse.png", "faces": "left",  "label": "Mousey", "icon": "🐭", "scale": 1.6 },
+  "elephant": { "file": "bear.png",  "faces": "right", "label": "Bear",   "icon": "🐻", "scale": 1.0 },
+  "monkey":   { "file": "girl.png",  "faces": "right", "label": "Mira",   "icon": "👧", "scale": 1.0 }
+}
