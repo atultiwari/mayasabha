@@ -90,6 +90,21 @@ export function createSound() {
     honk: () => [0, 0.2].forEach((at) => note({ type: 'square', from: 520, to: 430, dur: 0.14, gain: 0.12, at })),
     squeak: () => [0, 0.12].forEach((at) => note({ from: 2400, to: 3200, dur: 0.07, gain: 0.15, at })),
     snore: () => noise({ dur: 0.9, freq: 160, q: 3, gain: 0.25 }),
+    // drum kit and hit feedback (Kadam Taal)
+    kick: () => note({ from: 150, to: 45, dur: 0.25, gain: 0.6 }),
+    snare: () => { noise({ dur: 0.12, freq: 1800, q: 0.7, gain: 0.35 }); note({ type: 'triangle', from: 220, to: 180, dur: 0.08, gain: 0.15 }); },
+    hat: () => noise({ dur: 0.04, freq: 8000, q: 0.7, gain: 0.12, type: 'highpass' }),
+    perfect: () => [1047, 1568].forEach((f, i) => note({ from: f, dur: 0.14, gain: 0.18, at: i * 0.05 })),
+    good: () => note({ from: 784, dur: 0.12, gain: 0.16 }),
+    miss: () => note({ type: 'square', from: 160, to: 110, dur: 0.15, gain: 0.06 }),
+    // horror (Daraar)
+    crackle: () => Array.from({ length: 7 }, () => noise({ dur: 0.02 + Math.random() * 0.04, freq: 3000 + Math.random() * 4000, q: 2, gain: 0.25, at: Math.random() * 0.5 })),
+    rumble: () => noise({ dur: 1.8, freq: 90, q: 0.7, gain: 0.55, type: 'lowpass' }),
+    shatter: () => { noise({ dur: 0.7, freq: 4000, q: 0.5, gain: 0.35, type: 'highpass' }); [2637, 3136, 3520].forEach((f, i) => note({ from: f, dur: 0.3, gain: 0.05, at: 0.05 + i * 0.07 })); },
+    sting: () => [466, 494, 523, 554].forEach((f) => note({ type: 'sawtooth', from: f, to: f * 0.97, dur: 1.4, gain: 0.05 })),
+    heartbeat: () => [0, 0.24].forEach((at) => note({ from: 70, to: 40, dur: 0.16, gain: 0.6, at })),
+    whoosh: () => noise({ dur: 0.8, freq: 600, q: 0.5, gain: 0.3 }),
+    drone: () => [55, 58.3].forEach((f) => note({ type: 'sawtooth', from: f, to: f, dur: 4, gain: 0.05 })),
   };
 
   function play(name) {

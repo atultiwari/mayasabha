@@ -131,3 +131,16 @@ test('a person whose outline is much wider than tall is lying down, even if the 
   assert.equal(isWideShape(mask(100, 100, { x: 10, y: 40, w: 30, h: 20 }), 0.5), false);
   assert.equal(isWideShape(mask(10, 10, { x: 0, y: 0, w: 0, h: 0 })), false);
 });
+
+test('feet: where each visible foot touches the floor (between heel and toes)', async () => {
+  const { feetFromPose } = await import('../kit/vision/body-map.js');
+  const lm = Array.from({ length: 33 }, () => ({ x: 0, y: 0, visibility: 0 }));
+  lm[29] = { x: 0.4, y: 0.9, visibility: 0.9 }; lm[31] = { x: 0.44, y: 0.92, visibility: 0.9 }; // left heel, toes
+  lm[28] = { x: 0.6, y: 0.88, visibility: 0.9 }; // right ankle only
+  const id = { toStage: (p) => ({ x: p.x * 100, y: p.y * 100 }) };
+  const feet = feetFromPose([lm], id);
+  assert.equal(feet.length, 2);
+  close(feet[0].x, 42); close(feet[0].y, 91);
+  close(feet[1].x, 60); close(feet[1].y, 88);
+  assert.deepEqual(feetFromPose([], id), []);
+});

@@ -211,7 +211,42 @@ The illusion is exact from the viewer spot, which is perfect for filming: put th
 |---|---|
 | K | Mark the corner (drag 6 dots); a 10 cm grid shows on both walls |
 | M / P | Measurements (m) / viewer spot (distance, eye height, angle) |
-| 1–4 / Space | Scenes / play again |
+| B | Brighten the right wall (when the projector hits it at a steep angle) |
+| 1–5 / Space | Planet Parade (the Moon comes every other turn) / Break the Wall / Floating Cube / Aquarium / Saturn; play again |
+
+### Kadam Taal 👣 (कदमताल, a floor rhythm game)
+
+**Step on glowing pads as the notes arrive.** Project onto the floor: a lane board runs from the far edge
+to a row of big pads at your feet. The camera finds your heels and toes (MediaPipe pose), and a foot
+arriving on a pad is a step. Keys, a click on a pad, or the phone remote work too.
+
+- **Little feet (2–3 years):** three pads with favourite characters; fruit floats down and *waits* on its
+  pad until it's stepped on. Nothing is ever missed, and every step sparkles and plays a note.
+- **Grown-ups:** four lanes on a generated beat, Perfect / Good / Miss timing, +600 at a 10 streak, and the
+  tempo climbs as you keep hitting.
+
+| Key | What happens |
+|---|---|
+| M | Little feet / grown-ups |
+| Space / R | Start or pause (grown-ups) / restart |
+| 1 2 3 4 or ← ↓ ↑ → | Step on a pad |
+| C / K / I | Camera on / calibrate / show what it sees |
+| O / E | Turn the picture round / fit the corners on the floor |
+
+### Daraar 👁️ (दरार, "crack"): grown-ups only
+
+**A horror for the ceiling, bright enough for daylight.** Glowing cracks spread from one point and race
+round into the outline of a hole (no frame needed on the ceiling), the ceiling falls out in shards, a
+shaft crackling with electricity opens onto a portal, a giant eye peers down and stares at you, and a
+long-fingered hand reaches out over the edge. A projector can't show black, so everything is neon and the
+hole glows instead of going dark. It starts from the Ceiling Window's corner fit.
+
+| Key | What happens |
+|---|---|
+| Space / N / R | Start / skip to the next part / stop |
+| 1 2 3 4 | Jump to the cracks / shaft / eye / hand |
+| A | Repeat on its own |
+| O / E | Turn the picture round / fit the corners on the ceiling |
 
 ## Quick start
 
@@ -279,6 +314,8 @@ apps/room-map/      set up the wall once: shared corner fit + traced objects (ki
 apps/maya-masks/    projection mapping: traced shapes, scenes, effects library, rangoli, fireworks
 apps/cushion-physics/  Matter.js world built from real objects found by colour
 apps/kona/          corner illusion: off-axis cameras per wall + homography shader
+apps/kadam-taal/    floor rhythm game: pure chart/judging rules, pads, feet from pose
+apps/daraar/        ceiling horror: timeline, crack/shard geometry, creatures
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```

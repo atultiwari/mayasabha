@@ -213,3 +213,18 @@ export function isWideShape(mask, pixelAspect = 1) {
   if (x1 < 0) return false;
   return ((x1 - x0 + 1) * pixelAspect) / (y1 - y0 + 1) > WIDE;
 }
+
+// Per foot: [heel, toes, ankle]; heel+toes give the floor contact point, the ankle is a fallback.
+const FEET = [[29, 31, 27], [30, 32, 28]];
+
+/** Where each visible foot meets the floor (stage px), for stepping on projected floor pads. */
+export function feetFromPose(poses, mapping) {
+  const feet = [];
+  for (const lm of poses ?? []) {
+    for (const [heel, toes, ankle] of FEET) {
+      if (seen(lm[heel]) && seen(lm[toes])) feet.push(mapping.toStage({ x: (lm[heel].x + lm[toes].x) / 2, y: (lm[heel].y + lm[toes].y) / 2 }));
+      else if (seen(lm[ankle])) feet.push(mapping.toStage(lm[ankle]));
+    }
+  }
+  return feet;
+}
