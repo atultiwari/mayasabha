@@ -69,3 +69,10 @@ test('saved room settings are validated and clamped', () => {
   assert.equal(r.height, DEFAULT_ROOM.height);
   assert.equal(r.viewerDistance, 2.5);
 });
+
+test('a wall lit at a steep angle can be brightened to match the other (default: no change)', () => {
+  assert.equal(DEFAULT_ROOM.rightGain, 1);
+  assert.equal(sanitizeRoom({ rightGain: 1.8 }).rightGain, 1.8);
+  assert.equal(sanitizeRoom({ rightGain: 50 }).rightGain, 3);
+  assert.equal(sanitizeRoom({ rightGain: 0 }).rightGain, 0.5);
+});

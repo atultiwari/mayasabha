@@ -3,6 +3,7 @@
 // wall plane looks painted on the wall; behind it looks like a window; in front looks like it floats.
 // Each scene: build(ctx) → { group, update(t, dt) }.
 import * as THREE from '../../lib/three/three.module.js';
+import { paradeAt } from './parade.js';
 
 const TEX = '../../assets/space/';
 const WALL_COLOUR = 0xd9d4dc; // close to a plain painted wall, so the start looks like nothing at all
@@ -189,15 +190,12 @@ function aquarium({ room, art }) {
 }
 
 /** Saturn Rising: Saturn drifts out from behind the corner and hangs in the room in front of you. */
-function saturnRising({ room, loader }) {
-  const group = new THREE.Group();
-  lights(group);
-  group.add(starSky(loader));
+function saturnModel(loader, r = 0.32) {
   const saturn = new THREE.Group();
-  const body = planet(loader, '2k_saturn.jpg', 0.32);
+  const body = planet(loader, '2k_saturn.jpg', r);
   saturn.add(body);
-  const inner = 0.4;
-  const outer = 0.72;
+  const inner = r * 1.25;
+  const outer = r * 2.25;
   const ringGeo = new THREE.RingGeometry(inner, outer, 96, 1);
   const pos = ringGeo.attributes.position;
   const uv = ringGeo.attributes.uv;
@@ -205,6 +203,14 @@ function saturnRising({ room, loader }) {
   const ring = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0xd8c39a, alphaMap: loader.load(TEX + '2k_saturn_ring_alpha.png'), transparent: true, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2.4;
   saturn.add(ring);
+  return { saturn, body };
+}
+
+function saturnRising({ room, loader }) {
+  const group = new THREE.Group();
+  lights(group);
+  group.add(starSky(loader));
+  const { saturn, body } = saturnModel(loader);
   group.add(saturn);
   let clock = 0;
   return {
@@ -217,6 +223,76 @@ function saturnRising({ room, loader }) {
       saturn.position.set(2.2 - ease * 2.7, room.height * 0.55 + Math.sin(t * 0.8) * 0.04, -2.2 + ease * 2.7);
       body.rotation.y += dt * 0.4;
       saturn.rotation.z = Math.sin(t * 0.3) * 0.1;
+    },
+  };
+}
+
+/** A soft round glow (for the Sun), drawn once onto a canvas. */
+function glowSprite(colour, size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 8, 64, 64, 64);
+  grad.addColorStop(0, colour);
+  grad.addColorStop(1, 'rgba(255,140,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false }));
+  sprite.scale.set(size, size, 1);
+  return sprite;
+}
+
+function paradeBodies(loader) {
+  const sun = new THREE.Group();
+  const sunMap = loader.load(TEX + '2k_sun.jpg');
+  sunMap.colorSpace = THREE.SRGBColorSpace;
+  const sunBall = new THREE.Mesh(new THREE.SphereGeometry(0.2, 64, 64), new THREE.MeshBasicMaterial({ map: sunMap }));
+  sun.add(sunBall, glowSprite('rgba(255,200,80,0.7)', 0.62)); // glow fades out well inside a small corner
+  const { saturn, body: saturnBody } = saturnModel(loader, 0.17);
+  const ball = (file, r) => planet(loader, file, r);
+  return {
+    moon: { object: ball('2k_moon.jpg', 0.2), label: 'Moon! Chanda Mama!' },
+    earth: { object: ball('2k_earth_daymap.jpg', 0.22), label: 'Earth! Our home!' },
+    jupiter: { object: ball('2k_jupiter.jpg', 0.26), label: 'Jupiter! The biggest planet!' },
+    saturn: { object: saturn, spin: saturnBody, label: 'Saturn, with its rings!' },
+    sun: { object: sun, spin: sunBall, label: 'The Sun! So bright!' },
+  };
+}
+
+/**
+ * Planet Parade: the Moon, Earth, Jupiter, Saturn and the Sun take turns coming out of the corner
+ * to float in the room, then go back in. The Moon comes every other turn.
+ */
+function planetParade({ room, loader, say }) {
+  const group = new THREE.Group();
+  lights(group);
+  group.add(starSky(loader));
+  const bodies = paradeBodies(loader);
+  for (const b of Object.values(bodies)) {
+    b.object.visible = false;
+    group.add(b.object);
+  }
+  const deep = new THREE.Vector3(1.8, room.height * 0.55, -1.8); // far behind the corner
+  // Floating in the room, a little towards the left wall: it usually faces the projector more squarely
+  // (brighter), while the trip out of the corner still crosses both walls.
+  const front = new THREE.Vector3(-0.34, room.height * 0.5, 0.22);
+  let clock = 0;
+  let lastTurn = -1;
+  return {
+    group,
+    restart: () => { clock = 0; lastTurn = -1; },
+    update(t, dt) {
+      clock += dt;
+      const now = paradeAt(clock);
+      for (const [name, b] of Object.entries(bodies)) b.object.visible = name === now.name;
+      const b = bodies[now.name];
+      b.object.position.lerpVectors(deep, front, now.out);
+      b.object.position.y += Math.sin(t * 0.9) * 0.03 * now.out; // a gentle bob once out
+      (b.spin ?? b.object).rotation.y += dt * 0.35;
+      if (now.turn !== lastTurn && now.out > 0) {
+        lastTurn = now.turn;
+        say?.(b.label);
+      }
     },
   };
 }
@@ -239,8 +315,9 @@ export const CORNER_SCENES = Object.freeze({
   cube: { label: 'Floating Cube', icon: '🧊', build: floatingCube },
   aquarium: { label: 'Aquarium Corner', icon: '🐠', build: aquarium },
   saturn: { label: 'Saturn Rising', icon: '🪐', build: saturnRising },
+  parade: { label: 'Planet Parade', icon: '🌙', build: planetParade },
   grid: { label: 'Line-up grid', icon: '📐', build: grid },
 });
-export const SCENE_ORDER = Object.freeze(['wall-break', 'cube', 'aquarium', 'saturn', 'grid']);
+export const SCENE_ORDER = Object.freeze(['parade', 'wall-break', 'cube', 'aquarium', 'saturn', 'grid']);
 
 export { THREE };

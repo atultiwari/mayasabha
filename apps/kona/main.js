@@ -6,6 +6,7 @@ import { createHud } from '../../kit/hud.js';
 import { createSound } from '../../kit/sound.js';
 import { connectRemote } from '../../kit/remote-link.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
+import { say } from '../../kit/speech.js';
 import { POINT_NAMES, defaultPoints, sanitizePoints, sanitizeRoom, viewerPosition } from './corner-geometry.js';
 import { createCornerRenderer } from './corner-renderer.js';
 import { CORNER_SCENES, SCENE_ORDER, THREE } from './corner-scenes.js';
@@ -21,7 +22,8 @@ const hud = createHud({
     ['K', 'mark the corner: drag the 6 dots onto the real wall edges'],
     ['M', 'measurements: left width, right width, height (metres)'],
     ['P', 'viewer spot: distance from corner, eye height, angle'],
-    ['1–4', 'Break the Wall / Floating Cube / Aquarium / Saturn'],
+    ['B', 'right wall brightness (if it looks dimmer than the left)'],
+    ['1–5', 'Planet Parade / Break the Wall / Floating Cube / Aquarium / Saturn'],
     ['G', 'line-up grid (10 cm squares on both walls)'],
     ['Space', 'play the scene again'],
     ['F', 'fullscreen   H hide this'],
@@ -35,7 +37,7 @@ const corner = createCornerRenderer(stage.canvas, stage.size);
 const saved = loadJson(`${KEY}:setup`) ?? {};
 let room = sanitizeRoom(saved.room);
 let points = sanitizePoints(saved.points) ?? defaultPoints(stage.size);
-let sceneId = CORNER_SCENES[saved.scene] ? saved.scene : 'wall-break';
+let sceneId = CORNER_SCENES[saved.scene] ? saved.scene : 'parade';
 let marking = false;
 let dragging = null;
 let current = null;
@@ -46,7 +48,7 @@ const persist = () => saveJson(`${KEY}:setup`, { room, points, scene: sceneId })
 
 function buildScene() {
   const scene = new THREE.Scene();
-  const built = CORNER_SCENES[sceneId].build({ room, loader, art });
+  const built = CORNER_SCENES[sceneId].build({ room, loader, art, say: (text) => say(text, { force: true }) });
   scene.add(built.group);
   current = { scene, ...built };
 }
@@ -137,12 +139,13 @@ function drawMarks() {
 const ACTIONS = {
   k: () => setMarking(!marking),
   m: () => askNumbers('Projected area, in metres: left wall width, right wall width, height', ['leftWidth', 'rightWidth', 'height']),
+  b: () => askNumbers('Right wall brightness (1 = same; up to 3 when the projector hits it at a steep angle and it looks dim)', ['rightGain']),
   p: () => askNumbers('Viewer spot: distance from the corner (m), eye height above the bottom of the picture (m), angle (°, + towards the right wall)', ['viewerDistance', 'eyeHeight', 'viewerAngle']),
   g: () => setScene('grid'),
   ' ': () => current?.restart(),
   f: () => stage.toggleFullscreen(),
   h: () => hud.toggleHelp(),
-  ...Object.fromEntries(SCENE_ORDER.slice(0, 4).map((id, i) => [String(i + 1), () => setScene(id)])),
+  ...Object.fromEntries(SCENE_ORDER.slice(0, 5).map((id, i) => [String(i + 1), () => setScene(id)])),
 };
 
 window.addEventListener('keydown', (e) => {

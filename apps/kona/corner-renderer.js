@@ -18,6 +18,7 @@ const FRAGMENT = `
   uniform mat3 hL;
   uniform mat3 hR;
   uniform float stageH;
+  uniform float gainR;
   vec2 wallUv(mat3 h, vec3 p) { vec3 q = h * p; return q.xy / q.z; }
   bool inside(vec2 uv) { return uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0; }
   void main() {
@@ -25,7 +26,7 @@ const FRAGMENT = `
     vec2 l = wallUv(hL, p);
     vec2 r = wallUv(hR, p);
     if (inside(l)) gl_FragColor = texture2D(texL, l);
-    else if (inside(r)) gl_FragColor = texture2D(texR, r);
+    else if (inside(r)) gl_FragColor = vec4(min(texture2D(texR, r).rgb * gainR, 1.0), 1.0);
     else gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
 `;
@@ -68,7 +69,7 @@ export function createCornerRenderer(canvas, size) {
   const composite = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { texL: { value: null }, texR: { value: null }, hL: { value: new THREE.Matrix3() }, hR: { value: new THREE.Matrix3() }, stageH: { value: size.h } },
+    uniforms: { texL: { value: null }, texR: { value: null }, hL: { value: new THREE.Matrix3() }, hR: { value: new THREE.Matrix3() }, stageH: { value: size.h }, gainR: { value: 1 } },
     depthTest: false,
   });
   const screenScene = new THREE.Scene();
@@ -91,6 +92,7 @@ export function createCornerRenderer(canvas, size) {
     targets.right = makeTarget(room.rightWidth / room.height);
     composite.uniforms.texL.value = targets.left.texture;
     composite.uniforms.texR.value = targets.right.texture;
+    composite.uniforms.gainR.value = room.rightGain ?? 1;
   }
 
   /** Call when the 6 corner points move (stage px). */

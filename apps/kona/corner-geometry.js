@@ -14,10 +14,11 @@ import { computeHomography } from '../../kit/geometry.js';
 export const DEFAULT_ROOM = Object.freeze({
   leftWidth: 1.6, rightWidth: 1.2, height: 1.4, // projected area on each wall
   viewerDistance: 3.0, eyeHeight: 0.6, viewerAngle: 0, // where the illusion is perfect (e.g. the phone filming)
+  rightGain: 1, // brightness boost for the right wall when the projector hits it at a steep angle (it looks dimmer)
 });
 
 const LIMITS = {
-  leftWidth: [0.2, 10], rightWidth: [0.2, 10], height: [0.2, 5], viewerDistance: [0.5, 15], eyeHeight: [-2, 4], viewerAngle: [-40, 40],
+  leftWidth: [0.2, 10], rightWidth: [0.2, 10], height: [0.2, 5], viewerDistance: [0.5, 15], eyeHeight: [-2, 4], viewerAngle: [-40, 40], rightGain: [0.5, 3],
 };
 
 export function sanitizeRoom(value) {
