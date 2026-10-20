@@ -190,6 +190,29 @@ Without a camera, drag the virtual pillows with the mouse (that is also how the 
 The colour detector is a few lines of plain JavaScript (no OpenCV): colour mask → connected blobs →
 convex outlines, tested on photos of real cushions.
 
+### Kona 🧊 (कोना, corner illusion)
+
+**Anamorphic projection mapping on an inside corner.** Point the projector at a corner where two walls
+meet. Mark six points (the top and bottom of the corner line, and the outer edges of each wall), type in
+the rough size of the projected area, and say where the viewer stands. Each wall is then rendered with an
+off-axis camera from the viewer's eye (Kooima's generalised perspective projection) and pinned onto its
+wall with a per-pixel homography, so from that spot the two walls stop looking like walls:
+
+- **Break the Wall:** the corner turns to bricks that tumble out into the room, revealing Earth in space.
+- **Floating Cube:** a glowing cube hovers out of the corner, neon lines run back into the walls.
+- **Aquarium Corner:** both walls become glass with fish swimming deep behind them.
+- **Saturn Rising:** Saturn drifts out from behind the corner into the room.
+
+The illusion is exact from the viewer spot, which is perfect for filming: put the phone there.
+
+![Kona: the corner breaks open into space](docs/kona.png)
+
+| Key | What happens |
+|---|---|
+| K | Mark the corner (drag 6 dots); a 10 cm grid shows on both walls |
+| M / P | Measurements (m) / viewer spot (distance, eye height, angle) |
+| 1–4 / Space | Scenes / play again |
+
 ## Quick start
 
 ```bash
@@ -255,6 +278,7 @@ apps/rocket-ride/   bedtime story: pure story engine, bilingual script, cartoon 
 apps/room-map/      set up the wall once: shared corner fit + traced objects (kit/room/)
 apps/maya-masks/    projection mapping: traced shapes, scenes, effects library, rangoli, fireworks
 apps/cushion-physics/  Matter.js world built from real objects found by colour
+apps/kona/          corner illusion: off-axis cameras per wall + homography shader
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
