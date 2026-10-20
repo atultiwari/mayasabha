@@ -7,6 +7,7 @@ import { createHud } from '../../kit/hud.js';
 import { createSound } from '../../kit/sound.js';
 import { startMic } from '../../kit/mic.js';
 import { connectRemote } from '../../kit/remote-link.js';
+import { serverInfo } from '../../kit/server-info.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
 import { GROUND_ID, clampToLedge, makeGround, makeLedge, removeNearest, sanitizeLedges } from '../../kit/ledges.js';
 import { createPet, petEvent, updatePet } from './brain.js';
@@ -164,13 +165,9 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('pointerdown', () => sound.unlock());
 
 async function showRemoteAddress() {
-  try {
-    const body = await (await fetch('/api/info', { cache: 'no-store' })).json();
-    const [url] = body?.data?.remoteUrls ?? [];
-    if (url) hud.setFooter(`📱 Phone remote: ${url}`);
-  } catch (err) {
-    console.warn('could not load remote address', err);
-  }
+  const info = await serverInfo();
+  const [url] = info?.remoteUrls ?? [];
+  hud.setFooter(url ? `📱 Phone remote: ${url}` : 'Online version: keyboard only (run it locally for the phone remote)');
 }
 showRemoteAddress();
 

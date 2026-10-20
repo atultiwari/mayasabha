@@ -31,6 +31,14 @@ const link = connectRemote({
     if (msg.type === 'layout') renderLayout(msg.layout);
   },
   onStatus: (s) => {
+    if (s === 'unavailable') {
+      status.textContent = 'not available online';
+      grid.replaceChildren(Object.assign(document.createElement('p'), {
+        className: 'empty',
+        textContent: 'The phone remote needs MayaSabha running on a computer at home (npm start). Then scan the QR code on its home page.',
+      }));
+      return;
+    }
     status.textContent = s === 'connected' ? '● connected' : '○ reconnecting…';
     status.className = s;
   },

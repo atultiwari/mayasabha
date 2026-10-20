@@ -5,6 +5,7 @@ import { createEditor } from '../../kit/editor.js';
 import { createHud } from '../../kit/hud.js';
 import { createSound } from '../../kit/sound.js';
 import { connectRemote } from '../../kit/remote-link.js';
+import { serverInfo } from '../../kit/server-info.js';
 import { loadJson, saveJson } from '../../kit/storage.js';
 import { loadCharacters, resolveCharacters } from '../../kit/characters.js';
 import { DEPTH_RANGE, OFFSET_RANGE, farRect } from './shaft.js';
@@ -131,13 +132,9 @@ window.addEventListener('pointerdown', () => sound.unlock());
 const remote = connectRemote({ role: 'stage', layout: ceilingLayout(resolveCharacters({})), onMessage: (msg) => msg.type === 'press' && act(msg.id) });
 
 async function showRemoteAddress() {
-  try {
-    const body = await (await fetch('/api/info', { cache: 'no-store' })).json();
-    const [url] = body?.data?.remoteUrls ?? [];
-    if (url) hud.setFooter(`Fan off! Lie on the mattress and look up.  📱 ${url}`);
-  } catch (err) {
-    console.warn('could not load remote address', err);
-  }
+  const info = await serverInfo();
+  const [url] = info?.remoteUrls ?? [];
+  hud.setFooter(`Fan off! Lie down and look up.  ${url ? `📱 ${url}` : '(online version: keyboard only)'}`);
 }
 showRemoteAddress();
 

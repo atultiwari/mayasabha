@@ -1,6 +1,7 @@
 // Browser side of the phone-remote relay. Used by stage pages (announce buttons, receive presses)
 // and by the phone remote page (receive buttons, send presses). Reconnects automatically.
 import { parseServerMessage } from './protocol.js';
+import { serverInfo } from './server-info.js';
 
 const RETRY_MS = 2000;
 
@@ -49,6 +50,7 @@ export function connectRemote({ role, layout = null, onMessage, onStatus = () =>
     hello();
   }
 
-  open();
+  // Only connect when the local server is there (not on the online, static version).
+  serverInfo().then((info) => (info ? open() : onStatus('unavailable')));
   return { send, setLayout };
 }
