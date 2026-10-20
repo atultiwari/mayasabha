@@ -101,5 +101,16 @@ export function createSound() {
     }
   }
 
-  return { unlock, play, toggleMute: () => { muted = !muted; return muted; } };
+  /** A short musical note (marimba-like) at `freq` Hz, for bounces that play tunes. */
+  function tone(freq) {
+    if (!ready() || !Number.isFinite(freq)) return;
+    try {
+      note({ type: 'triangle', from: freq, to: freq * 0.995, dur: 0.45, gain: 0.32 });
+      note({ type: 'sine', from: freq * 2, to: freq * 2, dur: 0.18, gain: 0.08 });
+    } catch (err) {
+      console.warn('tone failed', err);
+    }
+  }
+
+  return { unlock, play, tone, toggleMute: () => { muted = !muted; return muted; } };
 }

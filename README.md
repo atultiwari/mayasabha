@@ -156,6 +156,27 @@ No dedicated mapping software is needed for one projector on flat-ish objects: t
 warp, the masks and the content. (Multi-projector blending or curved 3D surfaces are where tools like
 MadMapper, HeavyM or the free MapMap come in.)
 
+### Cushion Physics 🛋️ (camera + real objects)
+
+Put a few **red cushions** (or sticky notes, or any brightly coloured objects) on the floor or against
+the wall. The camera finds them by colour and they become **solid** in a physics world: fruit tumbles
+down, bounces off the real cushions, and has to reach Hathi waiting at the bottom. Slide a cushion to
+change the path. In **Marbles** mode every bounce plays a note, so the cushions become a musical toy.
+Without a camera, drag the virtual pillows with the mouse (that is also how the online version plays).
+
+![Cushion Physics](docs/cushion-physics.png)
+
+| Key | Phone | What happens |
+|---|---|---|
+| 1 2 | 🍌 🎵 | Feed Hathi / Marbles |
+| Space | ⬇️ | Drop one more |
+| ← → | ⬅️ ➡️ | Move Hathi |
+| C K X | 📷 | Camera on, calibrate to the projection, mirror |
+| O | 🎨 | Object colour: red / pink / orange / yellow / green / blue |
+
+The colour detector is a few lines of plain JavaScript (no OpenCV): colour mask → connected blobs →
+convex outlines, tested on photos of real cushions.
+
 ## Quick start
 
 ```bash
@@ -211,7 +232,7 @@ kit/              shared modules every activity uses
   mic.js clap.js  microphone loudness -> clap events
   sound.js        synthesised sound effects (no audio files)
   remote-link.js  phone remote over a LAN WebSocket relay (protocol.js validates every message)
-  vision/         camera, MediaPipe pose + body mask, camera-to-wall calibration, hand tracking
+  vision/         camera, MediaPipe pose + body mask, colour blobs, camera-to-wall calibration, hand tracking
   speech.js fx.js spoken names, particle bursts
 apps/room-pet/    the puppy: pure state-machine brain, fruit physics, visitors, renderer
 apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
@@ -219,6 +240,7 @@ apps/bubbles/     bubbles that pop on touch, butterflies that land on still hand
 apps/solar-system/  three.js solar system: orbit maths, scene, camera views, bilingual narration
 apps/rocket-ride/   bedtime story: pure story engine, bilingual script, cartoon planets with faces
 apps/maya-masks/    projection mapping: traced shapes, scenes, effects library, rangoli, fireworks
+apps/cushion-physics/  Matter.js world built from real objects found by colour
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
@@ -234,7 +256,7 @@ npm run coverage
 ## Ideas for what's next
 
 Floor puddles to stomp on, cushion drums,
-sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contributions welcome.
+a wall platformer, an "X-ray mirror". Contributions welcome.
 
 ## Credits
 
@@ -243,6 +265,7 @@ sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contribu
 - Planet, Sun and star textures: [Solar System Scope](https://www.solarsystemscope.com/textures/), CC BY 4.0
   (see [`assets/space/ATTRIBUTION.md`](assets/space/ATTRIBUTION.md)).
 - 3D rendering: [three.js](https://threejs.org/) (MIT), included in `lib/three/`.
+- Physics: [Matter.js](https://brm.io/matter-js/) (MIT), included in `lib/matter/`.
 - Body tracking: [MediaPipe](https://ai.google.dev/edge/mediapipe) (Apache 2.0), loaded at runtime.
 - Everything else, including sounds, is drawn or synthesised in code.
 

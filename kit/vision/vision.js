@@ -33,9 +33,10 @@ function placePanel(panel, large) {
 }
 
 /**
- * @param {{ stage: ReturnType<import('../stage.js').createStage>, key: string, hud: object }} opts
+ * @param {{ stage: ReturnType<import('../stage.js').createStage>, key: string, hud: object, pose?: boolean }} opts
+ * pose: false skips body tracking (camera + calibration only, e.g. for colour detection).
  */
-export function createVision({ stage, key, hud }) {
+export function createVision({ stage, key, hud, pose = true }) {
   const storageKey = `${key}:camera`;
   const saved = loadJson(storageKey) ?? {};
   let mirror = Boolean(saved.mirror);
@@ -57,8 +58,10 @@ export function createVision({ stage, key, hud }) {
     try {
       hud.toast('📷 Starting camera…', 4000);
       source = await openSource({ videoUrl });
-      hud.toast('🧠 Loading body tracking (first time can take a moment)…', 8000);
-      detector = detector ?? (await createPoseDetector());
+      if (pose) {
+        hud.toast('🧠 Loading body tracking (first time can take a moment)…', 8000);
+        detector = detector ?? (await createPoseDetector());
+      }
       hud.toast(`📷 Tracking on (${source.label})${points ? '' : ', press K to calibrate'}`, 4000);
     } catch (err) {
       console.error('camera start failed', err);
@@ -205,6 +208,8 @@ export function createVision({ stage, key, hud }) {
 
   return {
     get on() { return Boolean(source); },
+    get video() { return source?.video ?? null; },
+    get mapping() { return mapping; },
     get calibrating() { return Boolean(calibration); },
     toggle: (opts) => (source ? stop() : start(opts)),
     calibrate: beginCalibration,
