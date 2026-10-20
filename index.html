@@ -32,6 +32,14 @@
     @media (max-width: 560px) { .remote { flex-direction: column; text-align: center; } }
     footer { margin-top: 40px; color: var(--muted); font-size: 14px; }
     footer a { color: var(--accent); }
+    .creator { display: flex; gap: 16px; align-items: center; margin-top: 36px; padding: 14px 18px; border-radius: 16px;
+      background: var(--card); border: 1px solid #2c2850; width: fit-content; }
+    .creator img { display: block; border-radius: 8px; background: #fff; }
+    .creator p { margin: 0; }
+    .creator .by { font-size: 13px; color: var(--muted); }
+    .creator .name { font-size: 20px; font-weight: 700; }
+    .creator .name a { color: var(--ink); text-decoration: none; }
+    .creator .site { font-size: 14px; color: var(--accent); }
     code { background: #221e3a; padding: 1px 6px; border-radius: 6px; }
   </style>
 </head>
@@ -65,7 +73,15 @@
         <p>Bubbles & butterflies, cushion drums, floor puddles…</p>
       </div>
     </section>
-    <footer>Created by <a href="https://atultiwari.in/" target="_blank" rel="noopener">Dr. Atul Tiwari</a> · <a href="https://github.com/atultiwari/mayasabha" target="_blank" rel="noopener">GitHub</a> · MIT licence · Emoji art: Google Noto Emoji, Apache 2.0.</footer>
+    <aside class="creator" aria-label="Creator">
+      <a href="https://atultiwari.com/" target="_blank" rel="noopener"><img src="assets/creator-qr.svg" alt="QR code for atultiwari.com" width="96" height="96"></a>
+      <div>
+        <p class="by">Created by</p>
+        <p class="name"><a href="https://atultiwari.com/" target="_blank" rel="noopener">Dr. Atul Tiwari</a></p>
+        <p class="site">atultiwari.com</p>
+      </div>
+    </aside>
+    <footer>Created by <a href="https://atultiwari.com/" target="_blank" rel="noopener">Dr. Atul Tiwari</a> · <a href="https://github.com/atultiwari/mayasabha" target="_blank" rel="noopener">GitHub</a> · MIT licence · Emoji art: Google Noto Emoji, Apache 2.0.</footer>
   </main>
   <script type="module">
     // Show the phone-remote address so nobody has to look up the computer's IP.

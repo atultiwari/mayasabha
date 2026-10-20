@@ -1,6 +1,6 @@
 # MayaSabha (मायासभा)
 
-*Created by [Dr. Atul Tiwari](https://atultiwari.in/)*
+*Created by [Dr. Atul Tiwari](https://atultiwari.com/)*
 
 > *In the Mahabharata, the architect Maya built the Pandavas a hall of illusions, where polished floors
 > looked like pools of water and pools looked like floors.*
@@ -150,8 +150,12 @@ sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contribu
 **Dr. Atul Tiwari** built MayaSabha for his son and family, as a weekend experiment in
 turning a home projector into a playground.
 
-- Website: [atultiwari.in](https://atultiwari.in/)
+<a href="https://atultiwari.com/"><img src="assets/creator-qr.svg" alt="QR code for atultiwari.com" width="140" align="right"></a>
+
+- Website: [atultiwari.com](https://atultiwari.com/)
 - GitHub: [@atultiwari](https://github.com/atultiwari)
+
+<br clear="right">
 
 ## License
 
