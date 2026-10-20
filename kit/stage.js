@@ -7,9 +7,10 @@ import { applyHomography, cssMatrix3d, defaultCorners, isWarpable, sanitizeCorne
 const CURSOR_HIDE_MS = 2000;
 
 /**
- * @param {{ key: string, width?: number, height?: number }} opts
+ * @param {{ key: string, width?: number, height?: number, context?: '2d' | 'webgl' }} opts
+ * With context 'webgl' no 2D context is created; pass `canvas` to a WebGL renderer (e.g. Three.js).
  */
-export function createStage({ key, width = 1920, height = 1080 }) {
+export function createStage({ key, width = 1920, height = 1080, context = '2d' }) {
   const size = { w: width, h: height };
   const host = document.createElement('div');
   host.className = 'pk-stage';
@@ -94,7 +95,8 @@ export function createStage({ key, width = 1920, height = 1080 }) {
   return {
     size,
     canvas,
-    ctx: canvas.getContext('2d'),
+    host, // warped container: anything placed inside is corner-pinned with the picture
+    ctx: context === '2d' ? canvas.getContext('2d') : null,
     overlay,
     octx: overlay.getContext('2d'),
     get corners() { return corners; },

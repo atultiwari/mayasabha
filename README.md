@@ -89,6 +89,27 @@ Camera setup: put the camera next to the projector, facing the wall, then press 
 `npm run setup` once to keep tracking fully offline (otherwise it loads from a CDN). To try it without a
 camera, open `apps/bubbles/?video=<path-to-a-video>`.
 
+### Antariksh 🪐 (अंतरिक्ष, the solar system)
+
+The real solar system on your ceiling or wall: a glowing Sun, the eight planets with real textures, tilts
+and spins, Earth's Moon, Mars's Phobos and Deimos, Jupiter's four big moons, Saturn's rings and Titan, all
+orbiting at their true relative speeds (sped up). Fly to any body and hear its name and one simple fact in
+**English or Hindi**, see how the planets' **true sizes** compare to each other and to the Sun, or take a guided tour.
+
+![Antariksh: true sizes](docs/solar-sizes.png)
+
+| Key | Phone | What happens |
+|---|---|---|
+| S 1–8 M | ☀️ 🌍 🪐 🌙 … | Fly to the Sun, a planet (in order from the Sun), or the Moon |
+| Space / T | 🌌 | Whole system / straight up (best on a ceiling) |
+| Z | 📏 | True sizes compared |
+| A | 🚀 | Guided tour with narration |
+| L | 🔤 | English / हिन्दी |
+| [ ] P | 🐢 🐇 | Slower / faster / pause time |
+
+Hindi narration uses your computer's Hindi voice (on macOS: System Settings → Accessibility → Spoken
+Content → add a Hindi voice such as Lekha).
+
 ## Quick start
 
 ```bash
@@ -149,6 +170,7 @@ kit/              shared modules every activity uses
 apps/room-pet/    the puppy: pure state-machine brain, fruit physics, visitors, renderer
 apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
 apps/bubbles/     bubbles that pop on touch, butterflies that land on still hands
+apps/solar-system/  three.js solar system: orbit maths, scene, camera views, bilingual narration
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
@@ -163,13 +185,17 @@ npm run coverage
 
 ## Ideas for what's next
 
-A solar-system adventure, floor puddles to stomp on, cushion drums,
+A cartoon rocket-ride bedtime story through the planets, floor puddles to stomp on, cushion drums,
 sticky-note (or cushion) physics, a wall platformer, an "X-ray mirror". Contributions welcome.
 
 ## Credits
 
 - Character, fruit and scene images: [Google Noto Emoji](https://github.com/googlefonts/noto-emoji), Apache
   License 2.0 (see [`assets/ATTRIBUTION.md`](assets/ATTRIBUTION.md)).
+- Planet, Sun and star textures: [Solar System Scope](https://www.solarsystemscope.com/textures/), CC BY 4.0
+  (see [`assets/space/ATTRIBUTION.md`](assets/space/ATTRIBUTION.md)).
+- 3D rendering: [three.js](https://threejs.org/) (MIT), included in `lib/three/`.
+- Body tracking: [MediaPipe](https://ai.google.dev/edge/mediapipe) (Apache 2.0), loaded at runtime.
 - Everything else, including sounds, is drawn or synthesised in code.
 
 ## Creator
