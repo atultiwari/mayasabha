@@ -129,6 +129,33 @@ button. ← → skip chapters, R restarts, L switches language.
 
 ![Rocket Ride](docs/rocket-ride.png)
 
+### Maya Masks 🪔 (projection mapping)
+
+**Real projection mapping, in the browser.** Trace the objects in your room once (picture frames, the
+door, a clock, balloons, a patch of floor) as rectangles, ellipses or polygons, and tag each one. Every
+scene then paints each object to its exact outline, so the objects themselves seem to change:
+
+- **Diwali:** gold-lit frames with diyas on top and fireworks inside, a marigold toran and a glowing
+  "शुभ दीपावली" on the door, lantern balloons, a diya in the clock, a rangoli that draws itself on the floor.
+- **Magic:** aquarium frames, a swirling portal door (your pet character steps out), googly-eyed balloons
+  that follow you, a rainbow clock, a starry floor.
+- **Party:** every object pulses to the music (microphone) with confetti.
+- **Align:** plain white shapes, for lining the outlines up with the real objects.
+
+![Maya Masks: Diwali](docs/maya-masks-diwali.png)
+
+| Key | Phone | What happens |
+|---|---|---|
+| T | – | Trace mode: 1 rectangle, 2 ellipse, 3 polygon; Tab sets the tag; drag to adjust |
+| 1 2 3 4 | 🪔 ✨ 🎉 📐 | Diwali / Magic / Party / Align |
+| Space | 🎆 | Fireworks in every frame |
+| M | 🎤 | Microphone for Party mode |
+| B | ⚫ | Blackout |
+
+No dedicated mapping software is needed for one projector on flat-ish objects: the browser does the
+warp, the masks and the content. (Multi-projector blending or curved 3D surfaces are where tools like
+MadMapper, HeavyM or the free MapMap come in.)
+
 ## Quick start
 
 ```bash
@@ -191,6 +218,7 @@ apps/ceiling-window/  shaft perspective, scenes, peek-a-boo, bedtime fade
 apps/bubbles/     bubbles that pop on touch, butterflies that land on still hands
 apps/solar-system/  three.js solar system: orbit maths, scene, camera views, bilingual narration
 apps/rocket-ride/   bedtime story: pure story engine, bilingual script, cartoon planets with faces
+apps/maya-masks/    projection mapping: traced shapes, scenes, effects library, rangoli, fireworks
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
