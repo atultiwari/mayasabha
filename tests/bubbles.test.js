@@ -68,3 +68,16 @@ test('flying butterflies stay on the stage', () => {
   for (let i = 0; i < 60 * 20; i += 1) flock = stepButterflies(flock, [], 1 / 60, STAGE, Math.random);
   assert.ok(flock.every((b) => b.x > -150 && b.x < STAGE.w + 150 && b.y > -150 && b.y < STAGE.h + 150));
 });
+
+test('bubbles stay in the middle of the wall, away from the corners and sofa arms (safety)', () => {
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const [lo, hi] = BUBBLE.band.map((f) => f * STAGE.w);
+  let bubbles = Array.from({ length: 60 }, () => spawnBubble(STAGE, rand, true));
+  for (let i = 0; i < 300; i += 1) {
+    bubbles = stepBubbles(bubbles, 0.1, STAGE, rand);
+    for (const b of bubbles) assert.ok(b.x - b.r >= lo - 1 && b.x + b.r <= hi + 1, `bubble at ${b.x} r ${b.r}`);
+  }
+  const middle = bubbles.filter((b) => Math.abs(b.x - STAGE.w / 2) < (hi - lo) / 4).length;
+  assert.ok(middle > bubbles.length / 2, 'most bubbles near the centre');
+});

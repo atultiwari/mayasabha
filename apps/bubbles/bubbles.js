@@ -2,7 +2,10 @@
 // Some carry a surprise (a favourite character or a fruit) that pops out. Pure and immutable.
 import { gridAt } from '../../kit/vision/body-map.js';
 
-export const BUBBLE = Object.freeze({ rMin: 70, rMax: 130, speed: [45, 95], sway: 30, surpriseChance: 0.3, count: 7 });
+export const BUBBLE = Object.freeze({ rMin: 70, rMax: 130, speed: [45, 95], sway: 30, surpriseChance: 0.3, count: 7,
+  // Safety: only the middle of the wall, so a child reaching for bubbles stays away from corners
+  // and sofa arms. More bubbles near the centre than at the band's edges.
+  band: [0.25, 0.75] });
 export const SURPRISES = Object.freeze(['pet', 'elephant', 'monkey', 'mouse', 'penguin', 'banana', 'apple', 'orange']);
 const RING = 8; // body samples around each bubble
 const HAND_REACH = 0.95; // of the radius
@@ -12,7 +15,9 @@ let counter = 0;
 export function spawnBubble(stage, rng, fresh) {
   counter += 1;
   const r = BUBBLE.rMin + rng() * (BUBBLE.rMax - BUBBLE.rMin);
-  const x0 = r + rng() * (stage.w - 2 * r);
+  const lo = BUBBLE.band[0] * stage.w + r + BUBBLE.sway;
+  const hi = BUBBLE.band[1] * stage.w - r - BUBBLE.sway;
+  const x0 = lo + ((rng() + rng()) / 2) * Math.max(0, hi - lo);
   return {
     id: `b${counter}`, r, x0, x: x0,
     y: fresh ? stage.h + r + rng() * 200 : r + rng() * (stage.h - r),
