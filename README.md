@@ -248,6 +248,22 @@ hole glows instead of going dark. It starts from the Ceiling Window's corner fit
 | A | Repeat on its own |
 | O / E | Turn the picture round / fit the corners on the ceiling |
 
+### Roshandaan 👻 (रोशनदान, the old skylight): grown-ups only
+
+**True 3D on a ceiling light box.** The box's real frame becomes the rim of a deep shaft. The scene is
+rendered in 3D from the camera's spot (an off-axis projection onto the ceiling, as in Kona) and pinned
+to the ceiling through the box's four corners, so from that spot it looks like a real hole: the light
+flickers and dies, cracks spread, the panel falls out towards you, and hands rise out of the dark, curl
+over the real frame and lunge. Turn the room lights (and the box) off. The setup (the box's corners in
+projector pixels, its size, and the camera's position) comes from a camera calibration.
+
+| Key | What happens |
+|---|---|
+| Space / N / R | Start / next part / stop |
+| 1 2 | Jump to the shaft / the hands |
+| A | Repeat on its own |
+| B | Light the ceiling round the box (shows the hands' shadows) or keep it dark |
+
 ## Quick start
 
 ```bash
@@ -316,6 +332,7 @@ apps/cushion-physics/  Matter.js world built from real objects found by colour
 apps/kona/          corner illusion: off-axis cameras per wall + homography shader
 apps/kadam-taal/    floor rhythm game: pure chart/judging rules, pads, feet from pose
 apps/daraar/        ceiling horror: timeline, crack/shard geometry, creatures
+apps/roshandaan/    3D light-box horror: off-axis render onto the ceiling, shaft, hologram hands
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
 ```
