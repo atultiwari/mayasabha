@@ -2,7 +2,7 @@
 import { phaseStart } from './timeline.js';
 
 export const KEYS = Object.freeze({
-  ' ': 'start', n: 'skip', r: 'reset', a: 'auto', 1: 'jump-shaft', 2: 'jump-hands',
+  ' ': 'start', n: 'skip', r: 'reset', a: 'auto', 1: 'jump-shaft', 2: 'jump-hands', b: 'fill',
   f: 'fullscreen', h: 'help', v: 'mute',
 });
 
@@ -11,6 +11,7 @@ export const HELP_KEYS = Object.freeze([
   ['N', 'skip to the next part   R stop'],
   ['1 2', 'jump to the shaft / the hands'],
   ['A', 'repeat on its own'],
+  ['B', 'light the ceiling round the box (shows the hands\' shadows) / keep it dark'],
   ['F', 'fullscreen   V mute   H hide this'],
 ]);
 

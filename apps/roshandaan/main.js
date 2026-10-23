@@ -6,7 +6,7 @@ import { createStage } from '../../kit/stage.js';
 import { createHud } from '../../kit/hud.js';
 import { createSound } from '../../kit/sound.js';
 import { connectRemote } from '../../kit/remote-link.js';
-import { loadJson } from '../../kit/storage.js';
+import { loadJson, saveJson } from '../../kit/storage.js';
 import { setSpeechMuted } from '../../kit/speech.js';
 import { ceilingRect, projectorToMetric, sanitizeSetup, screenWall } from './setup.js';
 import { PHASES, handAt, panelAt, phaseAt, phaseStart } from './timeline.js';
@@ -39,6 +39,7 @@ for (const h of hands) world.scene.add(h.hand.object);
 // ---- state ------------------------------------------------------------------------------------
 let clock = null; // seconds into the story, or null when it's resting (box glowing like a light)
 let auto = false;
+let showFill = loadJson(`${KEY}:fill`) === true; // dark around the box unless asked
 let idle = 0;
 const AUTO_PAUSE_S = 8;
 
@@ -61,6 +62,11 @@ const ACTIONS = {
     auto = !auto;
     hud.toast(auto ? '🔁 Repeats on its own' : '🔁 Repeat off');
     if (auto && clock === null) start();
+  },
+  fill: () => {
+    showFill = !showFill;
+    saveJson(`${KEY}:fill`, showFill);
+    hud.toast(showFill ? '💡 Ceiling round the box lit (shadows show)' : '🌑 Dark round the box');
   },
   'jump-shaft': () => start(phaseStart('shatter')),
   'jump-hands': () => start(phaseStart('rise')),
@@ -111,7 +117,7 @@ stage.onFrame((dt, t) => {
   const time = clock ?? 0;
   const panel = clock === null ? { glow: 1, crack: 0, broken: false, shardT: 0 } : panelAt(time);
   const shaftLight = Math.random() < 0.08 ? 0.5 : 5 + Math.sin(t * 13) * 1.5; // a dying bulb far up the shaft
-  world.update({ panel, t, shaftLight });
+  world.update({ panel, t, shaftLight, showFill });
   for (const h of hands) h.hand.pose(clock === null ? { visible: false } : handAt(time - h.delay), h.place);
   ceiling.render(world.scene, setup.eye);
 });

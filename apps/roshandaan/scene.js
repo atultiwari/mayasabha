@@ -194,7 +194,7 @@ export function buildWorld({ rect, size, eye }) {
   Object.assign(roomLight.shadow.camera, { left: -2, right: 2, top: 2, bottom: -2, near: 0.1, far: 8 });
   scene.add(roomLight);
   // Room light spilling a little way up the shaft: walls bright at the rim, fading to black up inside.
-  const spill = new THREE.PointLight(0xfff0dc, 5, 2.2, 1.4);
+  const spill = new THREE.PointLight(0xfff0dc, 2.5, 1.6, 1.6);
   spill.position.set(eye.x * 0.05, eye.y * 0.05, -0.12);
   scene.add(spill);
   const deepLight = new THREE.PointLight(0xff8a3c, 6, 4, 1.6);
@@ -208,7 +208,8 @@ export function buildWorld({ rect, size, eye }) {
   const motes = dust(size);
   scene.add(fill, box.mesh, inside, fall.group, motes);
 
-  function update({ panel: p, t, shaftLight }) {
+  function update({ panel: p, t, shaftLight, showFill = false }) {
+    fill.visible = showFill; // off: only the box and what comes out of it are lit; on: shadows fall on a lit ceiling
     box.mesh.visible = !p.broken;
     box.paint(p.glow, p.crack);
     inside.visible = p.broken;
@@ -216,7 +217,7 @@ export function buildWorld({ rect, size, eye }) {
     fall.group.visible = p.broken && p.shardT < 3;
     if (fall.group.visible) fall.place(p.shardT);
     deepLight.intensity = p.broken ? shaftLight : 0;
-    spill.intensity = p.broken ? 5 : 0;
+    spill.intensity = p.broken ? 2.5 : 0;
     motes.rotation.z = t * 0.02;
   }
   return { scene, update };
