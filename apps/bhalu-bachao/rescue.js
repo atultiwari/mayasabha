@@ -8,7 +8,7 @@ export const HINTS = Object.freeze(['touch', 'red', 'arms', 'clap']);
 export const RESCUE = Object.freeze({
   walkS: 2.5, stuckS: 2.5, // Bear walks in, then gets stuck a while before the train shows up
   vMax: 260, brake: 120, // px/s and px/s²: brakes early and gently
-  safeGap: 220, bearHalfWidth: 110, // the train stops this far from Bear's side
+  safeGap: 220, bearHalfWidth: 150, // the train stops this far from Bear's side (his waving arms included)
   whistleEvery: 3, helpEvery: 4,
   hopS: 1, freedHoldS: 1.6, // Bear hops off; the train waits until he's clear
   passAccel: 300, trainLength: 900, cheerS: 3,

@@ -5,7 +5,7 @@ import * as THREE from '../../lib/three/three.module.js';
 import { layAlong, loadModel, restoreOldColours, standUp } from './models.js';
 
 const FOV = 30;
-export const SIZES = Object.freeze({ bear: 300, masha: 210, train: 900, penguin: 110 });
+export const SIZES = Object.freeze({ bear: 380, masha: 260, train: 900, penguin: 110 }); // tuned on the real sofa
 
 /** World point for a stage pixel (y down) at depth z. */
 export const toWorld = (stage, x, y, z = 0) => new THREE.Vector3(x - stage.w / 2, stage.h / 2 - y, z);
