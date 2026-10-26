@@ -233,6 +233,25 @@ arriving on a pad is a step. Keys, a click on a pad, or the phone remote work to
 | C / K / I | Camera on / calibrate / show what it sees |
 | O / E | Turn the picture round / fit the corners on the floor |
 
+### Bhalu Bachao 🐻🚂 (भालू बचाओ, "save the Bear!")
+
+**A rescue story on the sofa.** A railway runs along the real sofa back (the longest ledge in the Room
+Map). Bear walks on and his leg gets stuck; a toy train driven by the Penguin puffs out of a tunnel.
+Your child saves him: touching Bear on the wall, raising both arms ("STOP!"), holding up something red,
+or clapping (any of them works; each round suggests one). The train always brakes in time and waits,
+so nobody ever gets hurt; then Bear hops clear, Masha runs in, and everyone cheers.
+
+It uses your own 3D models (GLB), kept private in `assets/custom/models/`: `bear.glb` and
+`masha_rig.glb` (rigged), and `toy_train.glb` (its oval track is hidden; old-style materials get their
+colours back). Without them the page says which file is missing.
+
+| Key | What happens |
+|---|---|
+| Space / Enter | Save Bear |
+| C / M | Camera (touch, arms up, red) / microphone (claps) |
+| K / I | Calibrate the camera / show what it sees |
+| R | Start again |
+
 ### Daraar 👁️ (दरार, "crack"): grown-ups only
 
 **A horror for the ceiling, bright enough for daylight.** Glowing cracks spread from one point and race
@@ -332,6 +351,7 @@ apps/cushion-physics/  Matter.js world built from real objects found by colour
 apps/kona/          corner illusion: off-axis cameras per wall + homography shader
 apps/kadam-taal/    floor rhythm game: pure chart/judging rules, pads, feet from pose
 apps/daraar/        ceiling horror: timeline, crack/shard geometry, creatures
+apps/bhalu-bachao/  rescue story: pure state machine, GLB models on the sofa ledge, rescue inputs
 apps/roshandaan/    3D light-box horror: off-axis render onto the ceiling, shaft, hologram hands
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited

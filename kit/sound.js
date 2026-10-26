@@ -105,6 +105,10 @@ export function createSound() {
     heartbeat: () => [0, 0.24].forEach((at) => note({ from: 70, to: 40, dur: 0.16, gain: 0.6, at })),
     whoosh: () => noise({ dur: 0.8, freq: 600, q: 0.5, gain: 0.3 }),
     drone: () => [55, 58.3].forEach((f) => note({ type: 'sawtooth', from: f, to: f, dur: 4, gain: 0.05 })),
+    // toy train and a stuck bear (Bhalu Bachao)
+    steam: () => [[587, 0], [740, 0.38]].forEach(([f, at]) => { note({ type: 'square', from: f, to: f * 0.99, dur: 0.34, gain: 0.07, at, vibrato: 6 }); noise({ dur: 0.34, freq: 2500, q: 0.6, gain: 0.08, at }); }),
+    groan: () => [[160, 120, 0], [150, 105, 0.45]].forEach(([from, to, at]) => note({ type: 'sawtooth', from, to, dur: 0.38, gain: 0.08, at, vibrato: 8 })),
+    chug: () => [0, 0.18].forEach((at) => noise({ dur: 0.09, freq: 700, q: 0.8, gain: 0.18, at })),
   };
 
   function play(name) {

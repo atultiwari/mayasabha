@@ -24,3 +24,10 @@ Your child's favourite characters work best, and big full-body pictures are reco
 
 **Before posting a video publicly**, remember that cartoon characters belong to their studios;
 built-in characters (Noto emoji, Apache 2.0) are always safe to share.
+
+## 3D models (`models/`)
+
+Bhalu Bachao loads GLB files from `models/`: `bear.glb`, `masha_rig.glb` and `toy_train.glb`.
+Download from Sketchfab as **GLB** (one file with textures and the skeleton inside), keep the credits
+(Sketchfab's "Copy credits") in `models/CREDITS.txt`, and remember that fan-made models of TV characters
+are fine for play at home but not for sharing publicly.
