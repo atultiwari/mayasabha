@@ -342,6 +342,22 @@ function garland(ctx, s, env) {
   });
 }
 
+/** A ring of little diyas all round the outside of a shape, each with its own flickering flame. */
+function diyaRing(ctx, s, env) {
+  const b = bbox(s);
+  const size = Math.max(38, Math.min(60, (b.w + b.h) / 14));
+  const n = Math.max(10, Math.round((2 * (b.w + b.h)) / (size * 1.25)));
+  const c = centroid(s);
+  outlinePoints(s, n).forEach((p, i) => {
+    const len = Math.hypot(p.x - c.x, p.y - c.y) || 1;
+    const out = size * 0.75; // far enough out that no diya covers the picture
+    const x = p.x + ((p.x - c.x) / len) * out;
+    const y = p.y + ((p.y - c.y) / len) * out;
+    flameGlow(ctx, x, y - size * 0.45, size * 0.9, env.t, i + seedOf(s));
+    img(ctx, env.art?.diya, x, y, size);
+  });
+}
+
 // ---- Align ----------------------------------------------------------------------------------------
 
 function align(ctx, s) {
@@ -372,6 +388,7 @@ export const EFFECTS = Object.freeze({
   'gold-border': { clip: false, draw: goldBorder },
   'diya-top': { clip: false, draw: diyaTop },
   'diya-center': { clip: false, draw: diyaCenter },
+  'diya-ring': { clip: false, draw: diyaRing },
   'firework-window': { clip: true, draw: fireworkWindow },
   'warm-glow': { clip: true, draw: warmGlow },
   greeting: { clip: true, draw: greeting },

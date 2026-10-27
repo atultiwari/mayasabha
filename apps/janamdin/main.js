@@ -1,7 +1,8 @@
 // Janamdin (जन्मदिन): a birthday show on the living-room wall, made from the little one for Dadu. A
-// garland and glow appear round the puja picture (never over it), "Happy Birthday" bunting drops in,
+// ring of diyas and a golden glow appear round the puja picture (never over it), "Happy Birthday" bunting drops in,
 // the name bounces in, a cake appears on the real sofa back and the song plays. Blow the candles out
-// (microphone, or B), and fireworks, confetti, balloons and Masha and Bear with a sign take over.
+// (microphone, or B) for fireworks and confetti. From the very start, balloons and fruit float up beside
+// the picture and Masha, Bear and friends wander about the wall; the candles never go out.
 // In the address: ?name=Dadu&candles=7&sign=…&lang=hi
 import { createStage } from '../../kit/stage.js';
 import { createEditor } from '../../kit/editor.js';
@@ -20,7 +21,8 @@ import { birthdayLayout } from './layout.js';
 import { lyric, notesBetween, tuneLength } from './tune.js';
 import { feedBlow, initialBlow } from './blow.js';
 import { drawBunting, drawCake, drawName } from './decor.js';
-import { balloonZones, drawBalloons, drawConfetti, drawFireworks, drawFriends, spawnBalloon, spawnConfetti, stepBalloons, stepConfetti } from './party.js';
+import { balloonZones, drawBalloons, drawConfetti, drawFireworks, drawSign, signBox, spawnBalloon, spawnConfetti, stepBalloons, stepConfetti } from './party.js';
+import { drawFruits, drawWalkers, spawnFruit, spawnWalkers, stepFruits, stepWalkers } from './crowd.js';
 import { HELP_KEYS, KEYS, LAYOUT, WORDS } from './controls.js';
 
 const KEY = 'janamdin';
@@ -36,6 +38,7 @@ const fromOf = () => text(params.get('from')) || text(settings?.from?.[lang]) ||
 const signOf = () => [(params.get('sign') || WORDS[lang].sign(nameOf())).slice(0, 40), fromOf() && `— ${fromOf()}`];
 const CANDLES = Math.min(12, Math.max(1, Number(params.get('candles')) || 5));
 const BALLOONS = 16;
+const FRUIT = 10;
 const CANDLE_ROOM = 90; // candles and their flames stand this far above the top of the cake box
 const SHARED_ROOM = '../../assets/custom/room.json'; // your own room, kept private, for browsers without a Room Map
 
@@ -47,6 +50,12 @@ const sound = createSound();
 const editor = createEditor({ stage, ledges: false });
 const layout = birthdayLayout(stage.size, room);
 const zones = balloonZones(stage.size, layout.picture ? bbox(layout.picture) : null);
+// Where the friends may wander: below the bunting, feet no lower than the sofa back. They keep off the
+// picture, the cake (with its candles and the song's words) and the sign.
+const below = layout.bunting.y + layout.bunting.h;
+const walkArea = { x: 40, y: below, w: stage.size.w - 80, h: layout.ledge.y - below };
+const cakeAndWords = { ...layout.cake, y: layout.cake.y - CANDLE_ROOM - 50, h: layout.cake.h + CANDLE_ROOM + 50 };
+const keepOut = [layout.picture && bbox(layout.picture), cakeAndWords, signBox(layout.friends, signOf())].filter(Boolean);
 
 // ---- state (replaced, never mutated) ----------------------------------------------------------
 let show = null; // { t, blown } once started
@@ -56,19 +65,24 @@ let songT = null; // seconds into the song, or null
 let bursts = [];
 let confetti = [];
 let balloons = [];
+let fruits = [];
+let walkers = [];
 let nextBurst = 0;
 let micLevel = 0;
 let mic = null;
 let chars = null;
+let art = {}; // the diya picture, for the ring of diyas round the frame
 
 function start() {
   show = { t: 0, blown: false };
   blow = initialBlow();
   outFor = 0;
-  songT = null;
+  songT = 0; // the song plays from the start, over and over
   bursts = [];
   confetti = [];
-  balloons = [];
+  balloons = Array.from({ length: BALLOONS }, () => spawnBalloon(stage.size, zones, Math.random, true));
+  fruits = Array.from({ length: FRUIT }, () => spawnFruit(stage.size, zones, Math.random, true));
+  walkers = spawnWalkers(walkArea, keepOut);
   hud.hideHelp();
 }
 
@@ -134,11 +148,10 @@ function update(dt) {
   const before = phaseAt(show.t).name;
   show = nextShow(show, dt);
   const phase = phaseAt(show.t).name;
-  if (phase === 'wish' && before !== 'wish') songT = 0;
   if (songT !== null) {
     const next = songT + dt;
     for (const n of notesBetween(songT, next)) sound.tone(n.freq);
-    songT = next > tuneLength() + 1 ? null : next;
+    songT = next > tuneLength() + 1 ? 0 : next; // round again after a short breath
   }
   if (phase === 'wish' && !show.blown) {
     blow = feedBlow(blow, mic ? micLevel : 0, dt);
@@ -147,7 +160,6 @@ function update(dt) {
   if (phase === 'celebrate' && before === 'wish') {
     sound.play('chime');
     confetti = spawnConfetti(stage.size, 220);
-    balloons = Array.from({ length: BALLOONS }, () => spawnBalloon(stage.size, zones, Math.random, true));
   }
   if (phase === 'celebrate' || phase === 'balloons') {
     outFor += dt;
@@ -162,6 +174,8 @@ function update(dt) {
   bursts = stepBursts(bursts, dt);
   confetti = stepConfetti(confetti, dt, stage.size);
   balloons = stepBalloons(balloons, dt, stage.size, zones);
+  fruits = stepFruits(fruits, dt, stage.size, zones);
+  walkers = stepWalkers(walkers, dt, walkArea, keepOut);
 }
 
 function draw(ctx, t) {
@@ -173,20 +187,22 @@ function draw(ctx, t) {
   if (layout.picture && since('frame') > 0) {
     ctx.save();
     ctx.globalAlpha = Math.min(1, since('frame') / 2);
-    for (const fx of ['gold-border', 'garland']) paintEffect(ctx, fx, layout.picture, { t, sceneT: show.t, lang });
+    for (const fx of ['gold-border', 'diya-ring']) paintEffect(ctx, fx, layout.picture, { t, sceneT: show.t, lang, art });
     ctx.restore();
   }
   drawBalloons(ctx, balloons); // behind everything else
+  drawFruits(ctx, fruits, chars);
   if (since('bunting') > 0) drawBunting(ctx, layout.bunting, since('bunting'), t, lang);
   if (since('name') > 0) drawName(ctx, layout.name, since('name'), t, nameOf());
   if (since('cake') > 0) {
-    const lit = !show.blown && phase !== 'celebrate' && phase !== 'balloons';
-    drawCake(ctx, layout.cake, since('cake') / 1.5, t, { count: CANDLES, lit, blowing: blow.flicker, outFor });
+    // The candles stay lit all the way through: blowing only makes them flicker and starts the fireworks.
+    drawCake(ctx, layout.cake, since('cake') / 1.5, t, { count: CANDLES, lit: true, blowing: blow.flicker, outFor });
   }
-  if (since('balloons') > 0) drawFriends(ctx, layout.friends, since('balloons') / 1.2, t, chars, signOf());
+  drawSign(ctx, layout.friends, show.t / 1.2, signOf()); // who it's from, on show from the start
+  drawWalkers(ctx, walkers, chars, show.t / 1.5);
   drawFireworks(ctx, bursts);
   drawConfetti(ctx, confetti);
-  const words = songT !== null ? lyric(songT, nameOf(), lang) : phase === 'wish' ? WORDS[lang].blow : '';
+  const words = since('cake') <= 0 ? '' : (songT !== null && lyric(songT, nameOf(), lang)) || (phase === 'wish' ? WORDS[lang].blow : '');
   if (words) {
     ctx.save();
     ctx.font = '800 46px system-ui, sans-serif';
@@ -206,6 +222,12 @@ async function main() {
     console.error(err);
     hud.toast('⚠️ Character pictures missing: Masha and Bear will be absent', 6000);
   }
+  art = { diya: await new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => { console.error('diya picture missing'); resolve(null); };
+    img.src = '../../assets/noto/3d-diya.png';
+  }) };
   stage.onFrame((dt, t) => {
     update(dt);
     draw(stage.ctx, t);

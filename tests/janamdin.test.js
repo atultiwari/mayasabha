@@ -85,3 +85,47 @@ test('balloons rise beside the picture, never across it, and keep coming', async
   assert.equal(balloons.length, 30);
   assert.equal(balloonZones(STAGE, null).length, 1, 'no picture: the whole wall');
 });
+
+import { spawnWalkers, stepWalkers, spawnFruit, stepFruits, WALKERS } from '../apps/janamdin/crowd.js';
+import { balloonZones } from '../apps/janamdin/party.js';
+
+function seeded(seed) {
+  let s = seed;
+  return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+}
+
+test('the friends wander about but never walk over the picture or the cake', () => {
+  const area = { x: 40, y: 220, w: 1840, h: 820 };
+  const keepOut = [{ x: 526, y: 181, w: 420, h: 330 }, { x: 760, y: 700, w: 380, h: 340 }];
+  const rng = seeded(7);
+  let walkers = spawnWalkers(area, keepOut, rng);
+  assert.equal(walkers.length, WALKERS.length);
+  const starts = walkers.map((w) => `${w.x},${w.y}`);
+  for (let i = 0; i < 3000; i += 1) {
+    walkers = stepWalkers(walkers, 1 / 30, area, keepOut, rng);
+    for (const w of walkers) {
+      const body = { x: w.x - w.h * 0.4, y: w.y - w.h, w: w.h * 0.8, h: w.h };
+      assert.ok(!keepOut.some((o) => overlaps(body, o)), `${w.role} stepped onto a keep-out box`);
+    }
+  }
+  assert.ok(walkers.some((w, i) => `${w.x},${w.y}` !== starts[i]), 'somebody moved');
+});
+
+test('fruit floats up beside the picture, never across it', () => {
+  const zones = balloonZones(STAGE, { x: 526, y: 181, w: 420, h: 330 });
+  const rng = seeded(3);
+  let fruits = Array.from({ length: 10 }, () => spawnFruit(STAGE, zones, rng, false));
+  for (let i = 0; i < 2000; i += 1) {
+    fruits = stepFruits(fruits, 1 / 30, STAGE, zones, rng);
+    for (const f of fruits) assert.ok(f.x + f.size / 2 + 22 < 526 || f.x - f.size / 2 - 22 > 946, `${f.kind} drifted over the picture`);
+  }
+});
+
+test('the bunting parts round the picture when the picture sits high on the wall', () => {
+  const high = [{ id: 'puja', kind: 'polygon', tag: 'picture', points: [{ x: 740, y: 101 }, { x: 1079, y: 107 }, { x: 1070, y: 380 }, { x: 735, y: 377 }] }];
+  const { bunting } = birthdayLayout(STAGE, high);
+  assert.ok(bunting.gap, 'flags part round the picture');
+  assert.ok(bunting.gap.x0 < 735 && bunting.gap.x1 > 1079);
+  const low = [{ id: 'p', kind: 'rect', tag: 'picture', x: 700, y: 420, w: 300, h: 250 }];
+  assert.equal(birthdayLayout(STAGE, low).bunting.gap, null, 'a lower picture leaves the bunting whole');
+});

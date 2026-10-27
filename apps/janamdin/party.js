@@ -1,5 +1,5 @@
-// The party: balloons rising beside the puja picture (never across it), confetti, fireworks, and Masha
-// and Bear holding up a sign. Balloon and confetti motion is pure; the draw functions paint them.
+// The party: balloons rising beside the puja picture (never across it), confetti, fireworks, and a
+// sign on the sofa back. Balloon and confetti motion is pure; the draw functions paint them.
 import { FIREWORK, sparkAt } from '../maya-masks/fireworks.js';
 
 const BALLOON_COLORS = Object.freeze(['#ff5d8f', '#ffd23e', '#4cc9f0', '#7bd389', '#c77dff', '#ff9f1c', '#ff4d4d']);
@@ -101,40 +101,43 @@ export function drawFireworks(ctx, bursts) {
   }
 }
 
-function fitImage(ctx, img, cx, bottom, height, hop) {
-  if (!img) return;
-  const w = height * (img.width / img.height);
-  ctx.drawImage(img, cx - w / 2, bottom - height - hop, w, height);
+const POST = 90; // the sign stands on a post this tall, on the sofa back
+
+const signLines = (sign) => (Array.isArray(sign) ? sign : [sign]).filter(Boolean).slice(0, 2);
+
+/** Where the sign stands (board and post), for keeping the wandering friends off it. */
+export function signBox(box, sign) {
+  const signH = 60 + signLines(sign).length * 44;
+  return { x: box.x + 10, y: box.y + box.h - POST - signH, w: box.w - 20, h: signH + POST };
 }
 
-/** Masha and Bear on the sofa back, holding up a sign between them, hopping for joy. sign: one or two lines. */
-export function drawFriends(ctx, box, appear, t, chars, sign) {
-  const lines = (Array.isArray(sign) ? sign : [sign]).filter(Boolean).slice(0, 2);
-  const signH = 60 + lines.length * 44;
+/** A wooden sign on a post, rising up from behind the sofa back. sign: one or two lines. */
+export function drawSign(ctx, box, appear, sign) {
   if (appear <= 0) return;
-  const rise = (1 - Math.min(1, appear)) * box.h;
+  const lines = signLines(sign);
+  const area = signBox(box, sign);
+  const signH = area.h - POST;
+  const rise = (1 - Math.min(1, appear)) * area.h;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(box.x - 40, box.y - 220, box.w + 80, box.h + 220);
-  ctx.clip(); // they pop up from behind the sofa back
-  const bottom = box.y + box.h + rise;
-  fitImage(ctx, chars?.pet?.img, box.x + box.w * 0.22, bottom, box.h * 0.8, Math.abs(Math.sin(t * 5)) * 18);
-  fitImage(ctx, chars?.elephant?.img, box.x + box.w * 0.78, bottom, box.h, Math.abs(Math.sin(t * 5 + 1.5)) * 14);
-  const sy = bottom - box.h - signH - 20;
+  ctx.rect(area.x - 20, area.y - 20, area.w + 40, area.h + 20);
+  ctx.clip(); // it pops up from behind the sofa back
+  ctx.translate(0, rise);
+  ctx.fillStyle = '#8a5a2b';
+  ctx.fillRect(area.x + area.w / 2 - 9, area.y + signH, 18, POST);
   ctx.fillStyle = '#c98d4d';
   ctx.beginPath();
-  ctx.roundRect(box.x + 10, sy, box.w - 20, signH, 16);
+  ctx.roundRect(area.x, area.y, area.w, signH, 16);
   ctx.fill();
   ctx.strokeStyle = '#7a4b22';
   ctx.lineWidth = 6;
   ctx.stroke();
   ctx.fillStyle = '#ffffff';
-  ctx.font = '800 38px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   lines.forEach((line, i) => {
     ctx.font = i === 0 ? '800 38px system-ui, sans-serif' : '700 32px system-ui, sans-serif';
-    ctx.fillText(line, box.x + box.w / 2, sy + 52 + i * 46, box.w - 50);
+    ctx.fillText(line, area.x + area.w / 2, area.y + 52 + i * 46, area.w - 30);
   });
   ctx.restore();
 }

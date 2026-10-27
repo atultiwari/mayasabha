@@ -7,6 +7,7 @@ import { ledgesFromRoom } from '../../kit/room/room-map.js';
 const MARGIN = 60;
 const CAKE = Object.freeze({ w: 380, h: 300 });
 const FRIENDS_W = 420;
+const DIYA_ROOM = 70; // the ring of diyas round the picture reaches this far out
 
 export const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
@@ -24,7 +25,9 @@ export function birthdayLayout(stage, shapes) {
   const ledge = sofaLine(shapes ?? [], stage);
   const top = 20;
   const buntingH = Math.max(110, Math.min(200, (pb ? pb.y : stage.h * 0.22) - top - 10));
-  const bunting = { x: MARGIN, y: top, w: stage.w - 2 * MARGIN, h: buntingH };
+  // When the picture reaches up into the bunting, the flags part round it (and its ring of diyas).
+  const gap = pb && pb.y < top + buntingH + DIYA_ROOM ? { x0: pb.x - DIYA_ROOM, x1: pb.x + pb.w + DIYA_ROOM } : null;
+  const bunting = { x: MARGIN, y: top, w: stage.w - 2 * MARGIN, h: buntingH, gap };
   // Between the picture and the sofa back, share the wall: the name, then the song's words, then the
   // candles, then the cake standing on the sofa back.
   const nameTop = pb ? pb.y + pb.h + 16 : bunting.y + bunting.h + stage.h * 0.12;

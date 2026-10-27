@@ -20,22 +20,21 @@ export function letters(text) {
   return [...text];
 }
 
-export function drawBunting(ctx, box, local, t, lang) {
-  const items = letters(BUNTING_TEXT[lang] ?? BUNTING_TEXT.en);
+function drawFlags(ctx, items, first, seg, box, local, t) {
   const n = items.length;
-  const step = box.w / n;
+  const step = seg.w / n;
   const sag = box.h * 0.22;
-  const ropeY = (x) => box.y + 14 + sag * Math.sin(((x - box.x) / box.w) * Math.PI);
-  ctx.save();
+  const ropeY = (x) => box.y + 14 + sag * Math.sin(((x - seg.x) / seg.w) * Math.PI);
   ctx.strokeStyle = '#f5e6c8';
   ctx.lineWidth = 4;
   ctx.beginPath();
-  for (let x = box.x; x <= box.x + box.w; x += 20) (x === box.x ? ctx.moveTo(x, ropeY(x)) : ctx.lineTo(x, ropeY(x)));
+  for (let x = seg.x; x <= seg.x + seg.w; x += 20) (x === seg.x ? ctx.moveTo(x, ropeY(x)) : ctx.lineTo(x, ropeY(x)));
   ctx.stroke();
-  items.forEach((ch, i) => {
+  items.forEach((ch, j) => {
+    const i = first + j;
     const k = Math.min(1, Math.max(0, (local - i * 0.18) / DROP_S));
     if (k <= 0) return;
-    const cx = box.x + step * (i + 0.5);
+    const cx = seg.x + step * (j + 0.5);
     const top = ropeY(cx);
     const h = box.h - 30;
     const drop = (1 - bounce(k)) * -(top + h);
@@ -52,13 +51,31 @@ export function drawBunting(ctx, box, local, t, lang) {
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = `900 ${Math.round(h * 0.4)}px system-ui, sans-serif`;
+      ctx.font = `900 ${Math.round(Math.min(h, step) * 0.4)}px system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(ch, 0, h * 0.33);
     }
     ctx.restore();
   });
+}
+
+/**
+ * "Happy Birthday" flags on a rope across the top. If box.gap ({ x0, x1 }) is set, the rope stops short
+ * of it: the first word hangs to its left and the rest to its right, so nothing hangs over the picture.
+ */
+export function drawBunting(ctx, box, local, t, lang) {
+  const text = BUNTING_TEXT[lang] ?? BUNTING_TEXT.en;
+  ctx.save();
+  if (!box.gap) {
+    drawFlags(ctx, letters(text), 0, { x: box.x, w: box.w }, box, local, t);
+  } else {
+    const [head, ...rest] = text.split(' ');
+    const left = letters(head);
+    const right = letters(rest.join(' '));
+    drawFlags(ctx, left, 0, { x: box.x, w: box.gap.x0 - box.x }, box, local, t);
+    drawFlags(ctx, right, left.length, { x: box.gap.x1, w: box.x + box.w - box.gap.x1 }, box, local, t);
+  }
   ctx.restore();
 }
 

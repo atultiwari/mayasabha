@@ -235,12 +235,15 @@ arriving on a pad is a step. Keys, a click on a pad, or the phone remote work to
 
 ### Happy Birthday 🎂 (जन्मदिन)
 
-**A birthday show round the real room**, made for Dadu from his grandson. A marigold garland and a golden
+**A birthday show round the real room**, made for Dadu from his grandson. A ring of diyas and a golden
 glow light up round the puja picture (never over it), "Happy Birthday" bunting drops in above it, the
-name bounces in in gold, and a cake appears on the real sofa back while the Happy Birthday tune plays,
-with the words shown karaoke-style. Blow out the candles (a steady breath into the microphone; a clap
-doesn't count) or press B, and fireworks, confetti and balloons follow, balloons rising either side of
-the picture, then Masha and Bear pop up with a sign. Set it up in the address:
+name bounces in in gold, and a cake appears on the real sofa back. The Happy Birthday tune plays on a
+loop from the start, with the words shown karaoke-style. From the very start, balloons and fruit float up
+either side of the picture and Masha, Bear and their friends wander about the wall, never over the
+picture or the cake. Blow at the candles (a steady breath into the microphone; a clap doesn't count) or
+press B for fireworks and confetti; the candles stay lit throughout. A sign on the sofa back says who
+the wishes are from, from the start.
+Set it up in the address:
 `apps/janamdin/?name=Dadu&candles=7&sign=Love you, Dadu!&lang=hi`. Who the wishes are from goes on the
 sign's second line; keep it private in `assets/custom/janamdin.json` (git-ignored), e.g.
 `{ "from": { "en": "…", "hi": "…" } }`, or pass `&from=…`.
