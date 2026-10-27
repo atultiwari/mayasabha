@@ -85,10 +85,7 @@ export function drawName(ctx, box, local, t, name) {
       ctx.shadowBlur = 40;
       ctx.fillStyle = g;
       ctx.fillText(ch, x, y);
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = Math.max(2, size * 0.012); // a thin edge: thick strokes tangle inside curved letters
-      ctx.strokeStyle = '#8a4b00';
-      ctx.strokeText(ch, x, y);
+      ctx.shadowBlur = 0; // no outline: strokes draw stray shapes inside curved letters like "a"
     }
     x += widths[i] + gap;
   });

@@ -12,7 +12,7 @@ import { startMic } from '../../kit/mic.js';
 import { setSpeechMuted } from '../../kit/speech.js';
 import { loadCharacters } from '../../kit/characters.js';
 import { ROOM_KEY, loadRoom } from '../../kit/room/room-map.js';
-import { bbox } from '../../kit/room/shapes.js';
+import { bbox, sanitizeShapes } from '../../kit/room/shapes.js';
 import { paintEffect } from '../maya-masks/effects.js';
 import { spawnBurst, stepBursts } from '../maya-masks/fireworks.js';
 import { nextShow, phaseAt, phaseStart } from './show.js';
@@ -30,8 +30,11 @@ const nameOf = () => (params.get('name') || WORDS[lang].name).slice(0, 16);
 const signOf = () => (params.get('sign') || WORDS[lang].sign(nameOf())).slice(0, 40);
 const CANDLES = Math.min(12, Math.max(1, Number(params.get('candles')) || 5));
 const BALLOONS = 16;
+const CANDLE_ROOM = 90; // candles and their flames stand this far above the top of the cake box
+const SHARED_ROOM = '../../assets/custom/room.json'; // your own room, kept private, for browsers without a Room Map
 
-const room = loadRoom();
+// The Room Map saved in this browser, or else the one saved privately in assets/custom/room.json.
+const room = loadRoom().length ? loadRoom() : await fetch(SHARED_ROOM).then((r) => (r.ok ? r.json() : [])).then((v) => (Array.isArray(v) ? sanitizeShapes(v) : [])).catch(() => []);
 const stage = createStage({ key: room.length ? ROOM_KEY : KEY });
 const hud = createHud({ title: 'Happy Birthday 🎂', keys: HELP_KEYS, footer: 'Space starts the show. M: blow the candles out for real.' });
 const sound = createSound();
@@ -185,7 +188,7 @@ function draw(ctx, t) {
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = 'rgba(255,200,80,0.8)';
     ctx.shadowBlur = 16;
-    ctx.fillText(words, layout.cake.x + layout.cake.w / 2, layout.cake.y - 24);
+    ctx.fillText(words, layout.cake.x + layout.cake.w / 2, layout.cake.y - CANDLE_ROOM); // above the flames
     ctx.restore();
   }
 }

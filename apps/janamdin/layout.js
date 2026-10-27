@@ -25,12 +25,15 @@ export function birthdayLayout(stage, shapes) {
   const top = 20;
   const buntingH = Math.max(110, Math.min(200, (pb ? pb.y : stage.h * 0.22) - top - 10));
   const bunting = { x: MARGIN, y: top, w: stage.w - 2 * MARGIN, h: buntingH };
-  const cakeH = Math.min(CAKE.h, Math.max(160, ledge.y - (pb ? pb.y + pb.h : stage.h * 0.4) - 230));
+  // Between the picture and the sofa back, share the wall: the name, then the song's words, then the
+  // candles, then the cake standing on the sofa back.
+  const nameTop = pb ? pb.y + pb.h + 16 : bunting.y + bunting.h + stage.h * 0.12;
+  const NAME_MIN = 140;
+  const WORDS_AND_CANDLES = 150; // 60 px for a line of the song + 90 px for candles and flames
+  const cakeH = Math.min(CAKE.h, Math.max(160, ledge.y - nameTop - NAME_MIN - WORDS_AND_CANDLES));
   const cakeX = (ledge.x0 + ledge.x1) / 2 - CAKE.w / 2;
   const cake = { x: cakeX, y: ledge.y - cakeH, w: CAKE.w, h: cakeH };
-  const nameTop = pb ? pb.y + pb.h + 16 : bunting.y + bunting.h + stage.h * 0.12;
-  const LYRIC_ROOM = 70; // the song's words go between the name and the cake
-  const name = { x: MARGIN, y: nameTop, w: stage.w - 2 * MARGIN, h: Math.max(120, Math.min(240, cake.y - nameTop - LYRIC_ROOM)) };
+  const name = { x: MARGIN, y: nameTop, w: stage.w - 2 * MARGIN, h: Math.max(100, Math.min(240, cake.y - nameTop - WORDS_AND_CANDLES)) };
   const friends = { x: Math.max(ledge.x0, cake.x - FRIENDS_W - 40), y: ledge.y - 280, w: FRIENDS_W, h: 280 };
   return { bunting, name, cake, friends, picture, ledge };
 }
