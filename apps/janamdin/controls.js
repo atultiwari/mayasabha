@@ -26,6 +26,6 @@ export const LAYOUT = Object.freeze({
 });
 
 export const WORDS = Object.freeze({
-  en: { name: 'Dadu', sign: (n) => `Love you, ${n}! ❤️`, blow: '🌬️ Make a wish… and blow!' },
-  hi: { name: 'दादू', sign: (n) => `${n}, बहुत सारा प्यार! ❤️`, blow: '🌬️ कुछ माँगो… और फूँक मारो!' },
+  en: { name: 'Dadu', card: 'Happy Birthday!', sign: (n) => `Love you, ${n}! ❤️`, blow: '🌬️ Make a wish… and blow!' },
+  hi: { name: 'दादू', card: 'जन्मदिन मुबारक!', sign: (n) => `${n}, बहुत सारा प्यार! ❤️`, blow: '🌬️ कुछ माँगो… और फूँक मारो!' },
 });

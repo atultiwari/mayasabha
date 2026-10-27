@@ -1,6 +1,6 @@
-// Janamdin (जन्मदिन): a birthday show on the living-room wall, made from the little one for Dadu. A
-// ring of diyas and a golden glow appear round the puja picture (never over it), "Happy Birthday" bunting drops in,
-// the name bounces in, a cake appears on the real sofa back and the song plays. Blow the candles out
+// Janamdin (जन्मदिन): a birthday show on the living-room wall, made from the little one for Dadu. The
+// picture frame becomes a bright birthday card (gift, heart, your photos) ringed with diyas, "Happy
+// Birthday" bunting drops in, the name bounces in, a cake appears on the real sofa back and the song plays. Blow the candles out
 // (microphone, or B) for fireworks and confetti. From the very start, balloons and fruit float up beside
 // the picture and Masha, Bear and friends wander about the wall; the candles never go out.
 // In the address: ?name=Dadu&candles=7&sign=…&lang=hi
@@ -22,6 +22,7 @@ import { lyric, notesBetween, tuneLength } from './tune.js';
 import { feedBlow, initialBlow } from './blow.js';
 import { drawBunting, drawCake, drawName } from './decor.js';
 import { balloonZones, drawBalloons, drawConfetti, drawFireworks, drawSign, signBox, spawnBalloon, spawnConfetti, stepBalloons, stepConfetti } from './party.js';
+import { drawFrameCard, photoFiles } from './frame-card.js';
 import { drawFruits, drawWalkers, spawnFruit, spawnWalkers, stepFruits, stepWalkers } from './crowd.js';
 import { HELP_KEYS, KEYS, LAYOUT, WORDS } from './controls.js';
 
@@ -72,6 +73,7 @@ let micLevel = 0;
 let mic = null;
 let chars = null;
 let art = {}; // the diya picture, for the ring of diyas round the frame
+let photos = []; // your own photos for the card in the frame, if any
 
 function start() {
   show = { t: 0, blown: false };
@@ -137,6 +139,15 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('pointerdown', () => sound.unlock());
 connectRemote({ role: 'stage', layout: LAYOUT, onMessage: (msg) => msg.type === 'press' && act(msg.id) });
 
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => { console.error(`could not load ${src}`); resolve(null); };
+    img.src = src;
+  });
+}
+
 // ---- loop ------------------------------------------------------------------------------------
 function fireworkSpot() {
   const [a, b] = zones[Math.floor(Math.random() * zones.length)];
@@ -187,6 +198,7 @@ function draw(ctx, t) {
   if (layout.picture && since('frame') > 0) {
     ctx.save();
     ctx.globalAlpha = Math.min(1, since('frame') / 2);
+    drawFrameCard(ctx, layout.picture, since('frame'), t, 1, { top: WORDS[lang].card, name: nameOf() }, photos);
     for (const fx of ['gold-border', 'diya-ring']) paintEffect(ctx, fx, layout.picture, { t, sceneT: show.t, lang, art });
     ctx.restore();
   }
@@ -222,12 +234,8 @@ async function main() {
     console.error(err);
     hud.toast('⚠️ Character pictures missing: Masha and Bear will be absent', 6000);
   }
-  art = { diya: await new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => { console.error('diya picture missing'); resolve(null); };
-    img.src = '../../assets/noto/3d-diya.png';
-  }) };
+  art = { diya: await loadImage('../../assets/noto/3d-diya.png') };
+  photos = (await Promise.all(photoFiles(settings).map((f) => loadImage(`../../assets/custom/${f}`)))).filter(Boolean);
   stage.onFrame((dt, t) => {
     update(dt);
     draw(stage.ctx, t);

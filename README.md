@@ -235,8 +235,9 @@ arriving on a pad is a step. Keys, a click on a pad, or the phone remote work to
 
 ### Happy Birthday 🎂 (जन्मदिन)
 
-**A birthday show round the real room**, made for Dadu from his grandson. A ring of diyas and a golden
-glow light up round the puja picture (never over it), "Happy Birthday" bunting drops in above it, the
+**A birthday show round the real room**, made for Dadu from his grandson. The picture frame turns into a
+bright birthday card (a gift box that pops open, a beating heart with the name, then your own photos if
+you list them as `"photos": ["dadu-1.jpg"]` in the private `janamdin.json`), ringed with diyas; "Happy Birthday" bunting drops in above it, the
 name bounces in in gold, and a cake appears on the real sofa back. The Happy Birthday tune plays on a
 loop from the start, with the words shown karaoke-style. From the very start, balloons and fruit float up
 either side of the picture and Masha, Bear and their friends wander about the wall, never over the

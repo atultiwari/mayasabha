@@ -129,3 +129,14 @@ test('the bunting parts round the picture when the picture sits high on the wall
   const low = [{ id: 'p', kind: 'rect', tag: 'picture', x: 700, y: 420, w: 300, h: 250 }];
   assert.equal(birthdayLayout(STAGE, low).bunting.gap, null, 'a lower picture leaves the bunting whole');
 });
+
+import { cardScene, photoFiles } from '../apps/janamdin/frame-card.js';
+
+test('the frame card takes turns: gift, heart, then any private photos', () => {
+  assert.equal(cardScene(1, 0).scene, 'gift');
+  assert.equal(cardScene(8, 0).scene, 'heart');
+  assert.equal(cardScene(15, 0).scene, 'gift', 'round again with no photos');
+  assert.deepEqual(cardScene(15, 2).scene, { photo: 0 });
+  assert.deepEqual(photoFiles({ photos: ['dadu-1.jpg', '../secret.jpg', 7, 'x.exe'] }), ['dadu-1.jpg']);
+  assert.deepEqual(photoFiles({}), []);
+});

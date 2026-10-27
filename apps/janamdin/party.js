@@ -123,20 +123,26 @@ export function drawSign(ctx, box, appear, sign) {
   ctx.rect(area.x - 20, area.y - 20, area.w + 40, area.h + 20);
   ctx.clip(); // it pops up from behind the sofa back
   ctx.translate(0, rise);
-  ctx.fillStyle = '#8a5a2b';
-  ctx.fillRect(area.x + area.w / 2 - 9, area.y + signH, 18, POST);
-  ctx.fillStyle = '#c98d4d';
+  // Projected light reads best as bright colour on black: a dark board, a glowing gold edge, and
+  // golden and pink words (pale words on a light board wash out on the wall).
+  ctx.fillStyle = '#ffcf5a';
+  ctx.fillRect(area.x + area.w / 2 - 6, area.y + signH, 12, POST);
+  ctx.fillStyle = '#000000';
   ctx.beginPath();
   ctx.roundRect(area.x, area.y, area.w, signH, 16);
   ctx.fill();
-  ctx.strokeStyle = '#7a4b22';
-  ctx.lineWidth = 6;
+  ctx.shadowColor = 'rgba(255,190,60,0.9)';
+  ctx.shadowBlur = 24;
+  ctx.strokeStyle = '#ffcf5a';
+  ctx.lineWidth = 7;
   ctx.stroke();
-  ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   lines.forEach((line, i) => {
-    ctx.font = i === 0 ? '800 38px system-ui, sans-serif' : '700 32px system-ui, sans-serif';
+    ctx.font = i === 0 ? '900 44px system-ui, sans-serif' : '800 38px system-ui, sans-serif';
+    ctx.fillStyle = i === 0 ? '#ffe14d' : '#ff7ab8';
+    ctx.shadowColor = i === 0 ? 'rgba(255,200,60,0.9)' : 'rgba(255,90,170,0.9)';
+    ctx.shadowBlur = 18;
     ctx.fillText(line, area.x + area.w / 2, area.y + 52 + i * 46, area.w - 30);
   });
   ctx.restore();
