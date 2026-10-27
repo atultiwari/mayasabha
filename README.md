@@ -233,6 +233,22 @@ arriving on a pad is a step. Keys, a click on a pad, or the phone remote work to
 | C / K / I | Camera on / calibrate / show what it sees |
 | O / E | Turn the picture round / fit the corners on the floor |
 
+### Happy Birthday 🎂 (जन्मदिन)
+
+**A birthday show round the real room**, made for Dadu from his grandson. A marigold garland and a golden
+glow light up round the puja picture (never over it), "Happy Birthday" bunting drops in above it, the
+name bounces in in gold, and a cake appears on the real sofa back while the Happy Birthday tune plays,
+with the words shown karaoke-style. Blow out the candles (a steady breath into the microphone; a clap
+doesn't count) or press B, and fireworks, confetti and balloons follow, balloons rising either side of
+the picture, then Masha and Bear pop up with a sign. Set it up in the address:
+`apps/janamdin/?name=Dadu&candles=7&sign=Love you, Dadu!&lang=hi`.
+
+| Key | What happens |
+|---|---|
+| Space | Start the show (again) |
+| M / B | Microphone: blow the candles out / blow them out by key |
+| S / L | Sing the song again / English or हिन्दी |
+
 ### Bhalu Bachao 🐻🚂 (भालू बचाओ, "save the Bear!")
 
 **A rescue story on the sofa.** A railway runs along the real sofa back (the longest ledge in the Room
@@ -352,6 +368,7 @@ apps/kona/          corner illusion: off-axis cameras per wall + homography shad
 apps/kadam-taal/    floor rhythm game: pure chart/judging rules, pads, feet from pose
 apps/daraar/        ceiling horror: timeline, crack/shard geometry, creatures
 apps/bhalu-bachao/  rescue story: pure state machine, GLB models on the sofa ledge, rescue inputs
+apps/janamdin/      birthday show: running order, room layout round the picture, tune, candle blowing
 apps/roshandaan/    3D light-box horror: off-axis render onto the ceiling, shaft, hologram hands
 remote/           the phone remote page
 server.mjs        static files + WebSocket relay + QR code, LAN only, same-origin, rate-limited
