@@ -107,8 +107,10 @@ function fitImage(ctx, img, cx, bottom, height, hop) {
   ctx.drawImage(img, cx - w / 2, bottom - height - hop, w, height);
 }
 
-/** Masha and Bear on the sofa back, holding up a sign between them, hopping for joy. */
+/** Masha and Bear on the sofa back, holding up a sign between them, hopping for joy. sign: one or two lines. */
 export function drawFriends(ctx, box, appear, t, chars, sign) {
+  const lines = (Array.isArray(sign) ? sign : [sign]).filter(Boolean).slice(0, 2);
+  const signH = 60 + lines.length * 44;
   if (appear <= 0) return;
   const rise = (1 - Math.min(1, appear)) * box.h;
   ctx.save();
@@ -118,10 +120,10 @@ export function drawFriends(ctx, box, appear, t, chars, sign) {
   const bottom = box.y + box.h + rise;
   fitImage(ctx, chars?.pet?.img, box.x + box.w * 0.22, bottom, box.h * 0.8, Math.abs(Math.sin(t * 5)) * 18);
   fitImage(ctx, chars?.elephant?.img, box.x + box.w * 0.78, bottom, box.h, Math.abs(Math.sin(t * 5 + 1.5)) * 14);
-  const sy = bottom - box.h - 120;
+  const sy = bottom - box.h - signH - 20;
   ctx.fillStyle = '#c98d4d';
   ctx.beginPath();
-  ctx.roundRect(box.x + 10, sy, box.w - 20, 100, 16);
+  ctx.roundRect(box.x + 10, sy, box.w - 20, signH, 16);
   ctx.fill();
   ctx.strokeStyle = '#7a4b22';
   ctx.lineWidth = 6;
@@ -130,6 +132,9 @@ export function drawFriends(ctx, box, appear, t, chars, sign) {
   ctx.font = '800 38px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(sign, box.x + box.w / 2, sy + 50, box.w - 50);
+  lines.forEach((line, i) => {
+    ctx.font = i === 0 ? '800 38px system-ui, sans-serif' : '700 32px system-ui, sans-serif';
+    ctx.fillText(line, box.x + box.w / 2, sy + 52 + i * 46, box.w - 50);
+  });
   ctx.restore();
 }

@@ -27,7 +27,13 @@ const KEY = 'janamdin';
 const params = new URLSearchParams(location.search);
 let lang = params.get('lang') === 'hi' ? 'hi' : 'en';
 const nameOf = () => (params.get('name') || WORDS[lang].name).slice(0, 16);
-const signOf = () => (params.get('sign') || WORDS[lang].sign(nameOf())).slice(0, 40);
+// Who it's from lives in your private settings (assets/custom/janamdin.json), so children's names never
+// go into the public code: { "from": { "en": "…", "hi": "…" } }. ?from=… in the address works too.
+const PRIVATE_SETTINGS = '../../assets/custom/janamdin.json';
+const settings = await fetch(PRIVATE_SETTINGS).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+const text = (v) => (typeof v === 'string' ? v.trim().slice(0, 40) : '');
+const fromOf = () => text(params.get('from')) || text(settings?.from?.[lang]) || text(settings?.from?.en);
+const signOf = () => [(params.get('sign') || WORDS[lang].sign(nameOf())).slice(0, 40), fromOf() && `— ${fromOf()}`];
 const CANDLES = Math.min(12, Math.max(1, Number(params.get('candles')) || 5));
 const BALLOONS = 16;
 const CANDLE_ROOM = 90; // candles and their flames stand this far above the top of the cake box

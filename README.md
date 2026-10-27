@@ -241,7 +241,9 @@ name bounces in in gold, and a cake appears on the real sofa back while the Happ
 with the words shown karaoke-style. Blow out the candles (a steady breath into the microphone; a clap
 doesn't count) or press B, and fireworks, confetti and balloons follow, balloons rising either side of
 the picture, then Masha and Bear pop up with a sign. Set it up in the address:
-`apps/janamdin/?name=Dadu&candles=7&sign=Love you, Dadu!&lang=hi`.
+`apps/janamdin/?name=Dadu&candles=7&sign=Love you, Dadu!&lang=hi`. Who the wishes are from goes on the
+sign's second line; keep it private in `assets/custom/janamdin.json` (git-ignored), e.g.
+`{ "from": { "en": "…", "hi": "…" } }`, or pass `&from=…`.
 
 | Key | What happens |
 |---|---|
