@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { HINTS, RESCUE, newRescue, stepRescue } from '../apps/bhalu-bachao/rescue.js';
+import { HINTS, RESCUE, newRescue, stepRescue, autoSaveDue, AUTO_WAIT_S } from '../apps/bhalu-bachao/rescue.js';
 import { trackLine } from '../apps/bhalu-bachao/track.js';
 
 const STAGE = { w: 1920, h: 1080 };
@@ -108,4 +108,17 @@ test('the camera counts the moment a child starts helping, not someone still hol
   assert.equal(startsHelping(true, true), false, 'still up from last round: not again');
   assert.equal(startsHelping(true, false), false);
   assert.equal(startsHelping(false, false), false);
+});
+
+test('auto play frees Bear once the train has waited, and the rounds go on by themselves', () => {
+  let s = newRescue(STAGE, { y: 800, x0: 100, x1: 1800 });
+  const phases = new Set();
+  for (let i = 0; i < 60 * 60; i += 1) { // a minute at 60 fps, nobody at the keys
+    const r = stepRescue(s, 1 / 60, autoSaveDue(s) ? ['save'] : []);
+    s = r.state;
+    phases.add(s.phase);
+    if (s.phase === 'wait') assert.ok(s.t <= AUTO_WAIT_S + 0.02, 'does not wait past the auto-save time');
+  }
+  assert.ok(phases.has('freed') && phases.has('cheer'), 'Bear was freed and everyone cheered');
+  assert.ok(s.round >= 2, `several rounds played (${s.round})`);
 });

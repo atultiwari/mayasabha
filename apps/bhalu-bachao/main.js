@@ -15,7 +15,7 @@ import { loadCharacters } from '../../kit/characters.js';
 import { ROOM_KEY, loadRoom } from '../../kit/room/room-map.js';
 import { createVision } from '../../kit/vision/vision.js';
 import { COLOR_PRESETS, blobOutlines } from '../../kit/vision/color-blobs.js';
-import { newRescue, stepRescue } from './rescue.js';
+import { newRescue, stepRescue, autoSaveDue } from './rescue.js';
 import { trackLine } from './track.js';
 import { armsUp, redSignal, startsHelping, touchedBear } from './inputs.js';
 import { buildWorld } from './world.js';
@@ -38,6 +38,9 @@ const track = trackLine(room, stage.size);
 
 let rescue = newRescue(stage.size, track);
 let pending = false; // a save waiting for the next frame
+// Auto play: the story runs on its own, round after round (Bear is freed after the train waits a
+// moment). On by default; A turns it off to wait for the child instead, or ?auto=0 in the address.
+let auto = new URLSearchParams(location.search).get('auto') !== '0';
 let mic = null;
 let lastRed = 0;
 let wasRed = false;
@@ -69,6 +72,7 @@ async function toggleMic() {
 const ACTIONS = {
   save,
   restart: () => { rescue = newRescue(stage.size, track); },
+  auto: () => { auto = !auto; hud.toast(auto ? '▶️ Auto play: Bear is saved by himself' : '🧒 Waiting for you to save Bear'); },
   camera: () => vision.toggle(), calibrate: () => vision.calibrate(), mirror: () => vision.toggleMirror(), inspect: () => vision.toggleDebug(),
   mic: toggleMic,
   edit: () => editor.toggle(), fullscreen: () => stage.toggleFullscreen(), help: () => hud.toggleHelp(),
@@ -166,7 +170,7 @@ async function start() {
   }
   const world = actors.world;
   stage.onFrame((dt, t) => {
-    if (cameraSaves(t * 1000)) save();
+    if (cameraSaves(t * 1000) || (auto && autoSaveDue(rescue))) save();
     if (pending && rescue.phase === 'arrive') sound.play('squeak'); // too early: Bear isn't stuck yet
     const r = stepRescue(rescue, dt, pending ? ['save'] : []);
     pending = false;

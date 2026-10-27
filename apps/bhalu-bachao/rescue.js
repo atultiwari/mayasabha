@@ -15,6 +15,10 @@ export const RESCUE = Object.freeze({
 });
 
 const SAVEABLE = new Set(['stuck', 'approach', 'wait']);
+export const AUTO_WAIT_S = 3; // in auto play, Bear is freed after the train has waited this long
+
+/** Auto play (no one at the keys): true once the train has waited, whistling, long enough. */
+export const autoSaveDue = (state, waitS = AUTO_WAIT_S) => state.phase === 'wait' && state.t >= waitS;
 
 /** A new round. track: { y, x0, x1 } (stage px); round picks the suggested way to help. */
 export function newRescue(stage, track, round = 0) {

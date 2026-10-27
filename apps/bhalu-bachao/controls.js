@@ -1,7 +1,7 @@
 // Keys, help text, phone buttons and which sound each story moment makes, for Bhalu Bachao.
 
 export const KEYS = Object.freeze({
-  ' ': 'save', enter: 'save', r: 'restart',
+  ' ': 'save', enter: 'save', r: 'restart', a: 'auto',
   c: 'camera', m: 'mic', k: 'calibrate', x: 'mirror', i: 'inspect',
   e: 'edit', f: 'fullscreen', h: 'help', v: 'mute',
 });
@@ -11,7 +11,7 @@ export const HELP_KEYS = Object.freeze([
   ['C', 'camera: touch Bear, hands up, or hold up a red cushion'],
   ['M', 'microphone: a real clap saves him'],
   ['K', 'calibrate the camera to the projection   X mirror   I show what it sees'],
-  ['R', 'start again'],
+  ['R', 'start again   A auto play on/off (on: the story runs by itself, on a loop)'],
   ['E', 'edit: fit the 4 corners on the wall'],
   ['F', 'fullscreen   V mute   H hide this'],
 ]);
